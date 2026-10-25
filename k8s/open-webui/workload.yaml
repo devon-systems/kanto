@@ -62,6 +62,10 @@ spec:
               value: /api/models,/api/chat/completions
             - name: ENABLE_PERSISTENT_CONFIG
               value: "false"
+            - name: ENABLE_WEB_SEARCH
+              value: "true"
+            - name: WEB_SEARCH_ENGINE
+              value: duckduckgo
             - name: ENABLE_OPENAI_API
               value: "true"
             - name: OPENAI_API_BASE_URL
