@@ -6,6 +6,8 @@ _: {
       lemonade = {
         host = "0.0.0.0";
         allowedOrigins = ["https://openwebui.narwhal-snapper.ts.net"];
+        models = ["Muse-Glimmer-30B-GGUF"];
+        recipeOptions."builtin.Muse-Glimmer-30B-GGUF".ctx_size = 65536;
         settings = {
           max_loaded_models = 1;
           llamacpp.backend = "rocm";
