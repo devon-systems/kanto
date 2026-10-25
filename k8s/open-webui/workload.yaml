@@ -63,7 +63,11 @@ spec:
             - name: ENABLE_PERSISTENT_CONFIG
               value: "false"
             - name: ENABLE_OPENAI_API
-              value: "false"
+              value: "true"
+            - name: OPENAI_API_BASE_URL
+              value: http://$(VERMILION_IP):8095/v1
+            - name: OPENAI_API_KEY
+              value: unused
             - name: ENABLE_OLLAMA_API
               value: "true"
             - name: WEBUI_URL

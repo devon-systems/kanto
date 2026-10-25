@@ -21,6 +21,7 @@
         self.nixosModules.lanzaboote
         self.nixosModules.morgan
         self.nixosModules.ollama
+        self.nixosModules.strata
         self.nixosModules.tailscale
         self.nixosModules.vermilion
         self.nixosModules.wifi

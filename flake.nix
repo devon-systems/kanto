@@ -6,6 +6,8 @@
     import-tree.url = "github:denful/import-tree";
     flake-parts.url = "github:hercules-ci/flake-parts";
 
+    nix-amd-ai.url = "github:noamsto/nix-amd-ai";
+
     blzrd = {
       url = "github:alyraffauf/blzrd";
       inputs.flake-parts.follows = "flake-parts";
