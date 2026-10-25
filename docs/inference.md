@@ -68,6 +68,60 @@ workloads consistent. Compare cold and warm time to first token as well as
 generation speed and memory use. Runtime and hardware settings belong in the
 host configuration rather than client-specific workarounds.
 
+## Set reasoning effort
+
+In Open WebUI, open **Chat Controls → Advanced Parameters**. Use the control
+for the selected backend:
+
+- For Ollama, set **Think (Ollama)** to **On**, **Off**, or **Custom**. For
+  **Custom**, enter a level supported by that model.
+- For Strata through Lemonade, set **Reasoning Effort** to **Custom** and enter
+  `none`, `low`, `medium`, or `high`.
+
+The generic **Reasoning Effort** field does not control native Ollama
+connections. **Reasoning Tags** controls display, not the amount of thinking.
+See [Open WebUI's reasoning controls](https://docs.openwebui.com/features/chat-conversations/chat-features/reasoning-models/).
+
+The installed models reported these settings on October 25, 2026:
+
+| Model                        | Supported settings                  | Backend default |
+| ---------------------------- | ----------------------------------- | --------------- |
+| `qwen3.6:35b-a3b-mtp-q4_K_M` | On, Off                             | On              |
+| `muse-glimmer:latest`        | Off, `low`, `medium`, `high`, `max` | `high`          |
+| `qwen3.8:latest`             | Off, `low`, `medium`, `xhigh`       | `medium`        |
+| `gemma4:latest`              | On, Off                             | On              |
+| `Qwen3.8-Flash-Next-Strata`  | `none`, `low`, `medium`, `high`     | `high`          |
+
+Use the exact level names. In particular, Ollama's Qwen3.8 uses `xhigh`, while
+Strata's Qwen model uses `high`. Ollama exposes supported values and defaults
+through [`/api/show`](https://docs.ollama.com/capabilities/thinking), so check
+again after replacing a model.
+
+Strata's levels guide the model rather than impose a fixed token count.
+`none` disables thinking. A separate `reasoning_budget_tokens` parameter sets
+a hard thinking cap. See the [Strata documentation](https://github.com/Niko1221/Strata/blob/v0.1.44.1/docs/DETAILS.md).
+
+### Share defaults with API clients
+
+To save a model default, use **Workspace → Models → Edit Model → Advanced
+Parameters**. A setting in one WebUI chat does not change Hermes or OpenCode.
+
+For Strata requests through WebUI, the precedence is:
+
+1. The request's `reasoning_effort`, such as a value sent by Hermes or OpenCode.
+2. The saved WebUI model's **Reasoning Effort**, when the request omits it.
+3. Strata's backend default, when neither supplies a value.
+
+For example, a client request with `"reasoning_effort": "low"` uses low
+effort even if the saved model default is high. Client menus can expose levels
+that Strata does not support. Choose `none`, `low`, `medium`, or `high`, and
+ensure that the client sends the selected value in its Chat Completions request.
+
+As checked on October 25, 2026, Kanto has no Strata reasoning override in the
+backend configuration or saved WebUI model parameters. Requests without an
+explicit setting therefore use `high`. This precedence describes Strata's
+OpenAI-compatible connection, not native Ollama's `think` parameter.
+
 ## Run code with Open Terminal
 
 Enable Terminal in WebUI and select **Kanto workspace** for server-side code
