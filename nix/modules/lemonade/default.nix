@@ -30,8 +30,6 @@
       "d /var/lib/lemonade/models/lemonade 0750 lemonade lemonade -"
     ];
 
-    systemd.services.lemond.serviceConfig.StateDirectory = "lemonade";
-
     networking.firewall.interfaces.cni0.allowedTCPPorts = [config.hardware.amd-npu.lemonade.port];
 
     nix.settings = {
