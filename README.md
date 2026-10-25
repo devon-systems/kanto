@@ -19,8 +19,7 @@ persistent workspaces for code execution through WebUI. ComfyUI runs on the
 host with a shared workspace and job queue.
 
 Separate Tailscale ingress nodes provide private HTTPS access to Open WebUI and
-ComfyUI. Tailscale sharing gives Morgan access from her own tailnet. Vermilion
-uses local k3s networking.
+ComfyUI. Vermilion uses local k3s networking.
 
 Comin reconciles host configuration from `master`. Flux reconciles the
 Kubernetes resources in `k8s/flux-system/` from the same branch.
