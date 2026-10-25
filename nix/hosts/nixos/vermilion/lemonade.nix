@@ -5,6 +5,9 @@ _: {
       gpuTarget = "gfx1151";
       lemonade = {
         host = "0.0.0.0";
+        port = 13305;
+        autoStart = true;
+        flashAttn = "on";
         allowedOrigins = ["https://openwebui.narwhal-snapper.ts.net"];
         models = [
           "Muse-Glimmer-30B-GGUF"
@@ -25,12 +28,19 @@ _: {
           };
         };
         recipeOptions = {
-          "builtin.Muse-Glimmer-30B-GGUF".ctx_size = 65536;
+          "builtin.Muse-Glimmer-30B-GGUF" = {
+            ctx_size = 65536;
+            llamacpp_args = "--spec-draft-n-max 3";
+          };
           "builtin.Qwen3.6-35B-A3B-MTP-GGUF".ctx_size = 65536;
         };
         settings = {
           max_loaded_models = 1;
           auto_evict = false;
+          global_timeout = 0;
+          auto_update_models = false;
+          auto_check_model_updates = true;
+          telemetry.enabled = false;
           llamacpp.backend = "rocm";
         };
       };
@@ -39,13 +49,23 @@ _: {
         quant = "UD-IQ4_XS";
         profile = "fast";
         contextSize = 262144;
+        vision.enable = true;
+        sampling = {
+          temperature = 0.6;
+          top_p = 0.95;
+          top_k = 20;
+        };
         extraArgs = [
+          "--prompt-cache"
+          "6"
           "--conversation-cache-mib"
           "16384"
           "--conversation-cache-slots"
           "16"
           "--conversation-cache-min-tokens"
           "2048"
+          "--conversation-cache-min-free-mib"
+          "2560"
           "--kv-resident"
           "32768"
         ];

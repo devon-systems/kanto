@@ -60,6 +60,8 @@ spec:
               value: "true"
             - name: API_KEYS_ALLOWED_ENDPOINTS
               value: /api/models,/api/chat/completions
+            - name: CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
+              value: "1"
             - name: ENABLE_PERSISTENT_CONFIG
               value: "false"
             - name: ENABLE_WEB_SEARCH
