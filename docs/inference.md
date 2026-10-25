@@ -32,11 +32,8 @@ Hoenn configures a `kanto` provider for both OpenCode and Hermes, using its
 SOPS-managed WebUI key. In OpenCode, select Kanto through `/models`. In Hermes,
 select a model with `/model custom:kanto:<model-id>`.
 
-On other machines, use `hermes model` and choose a custom endpoint, or add an
-OpenAI-compatible provider to OpenCode. Use the same base URL, personal key,
-and model ID. Configure the client's context limit to match the backend's
-configured capacity. A model must support tool calling for agent tasks; test
-streaming and a complete tool call when adding a new model or client.
+On other machines, follow [Connect OpenCode and Hermes to Kanto](agent-clients.md)
+for client configuration, credentials, and model selection without Nix.
 
 ## Discover and manage models
 

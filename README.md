@@ -29,6 +29,7 @@ Comin reconciles host configuration from `master`. Flux reconciles Kubernetes
 applications and secrets from `k8s/flux-system/`.
 
 See [Use Kanto models](docs/inference.md) for service access and client setup.
+For manual client configuration, see [Connect OpenCode and Hermes to Kanto](docs/agent-clients.md).
 
 ## Repository layout
 
