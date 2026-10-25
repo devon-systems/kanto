@@ -59,9 +59,22 @@ as `keys/morgan_<device>.pub` to enable key-based login.
 Linux and Open WebUI accounts are separate. WebUI signup is disabled. Its
 bootstrap administrator credentials come from
 `k8s/secrets/open-webui.sops.yaml` and apply when the database is empty.
-Manage application accounts, model access grants, and API-key permissions in
-WebUI's administration interface. Grant model access to regular users before
-they connect. An active account alone does not make models visible.
+For each new WebUI user, complete these steps in the administration interface:
+
+1. Set the account role to **User**.
+2. Add the account to the **API access** group if the user needs an API key.
+   This group grants permission to create personal keys, not administrator access.
+3. Grant the account read access to each model they should use.
+4. Have the user refresh WebUI and confirm that the models and API-key option appear.
+
+Morgan has read access to the five current models and belongs to **API access**.
+When you add a model, grant access to its intended users. Existing model grants
+do not apply to new models.
+
+WebUI stores groups, memberships, and model grants in its database. These
+settings survive restarts but need restoration or recreation after a database
+loss. For a fresh database, create **API access** with the **API Keys** feature
+permission before adding members.
 
 Host secrets use Aly's administrator keys and `keys/root_*.pub`. Kubernetes
 secrets also include Kanto's Flux age recipient. Morgan's login keys do not
