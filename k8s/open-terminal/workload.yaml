@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-terminal-home
+  namespace: open-webui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-terminal
+  namespace: open-webui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: open-terminal
+  template:
+    metadata:
+      annotations:
+        security.aly.codes/exception-privilege-escalation: >-
+          Open Terminal multi-user mode uses sudo to create and switch between
+          users inside the container.
+      labels:
+        app: open-terminal
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: vermilion
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: open-terminal
+          image: ghcr.io/open-webui/open-terminal:0.14.5@sha256:02b8701e47a0d5aaf5c8b5ff2b8588975eec9bc452df2fa32141c61c8910ea24
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop:
+                - NET_RAW
+          env:
+            - name: OPEN_TERMINAL_MULTI_USER
+              value: "true"
+            - name: OPEN_TERMINAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: open-terminal
+                  key: OPEN_TERMINAL_API_KEY
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+          volumeMounts:
+            - name: home
+              mountPath: /home
+      volumes:
+        - name: home
+          persistentVolumeClaim:
+            claimName: open-terminal-home
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-terminal
+  namespace: open-webui
+spec:
+  selector:
+    app: open-terminal
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

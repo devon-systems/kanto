@@ -76,6 +76,11 @@ spec:
               value: "true"
             - name: WEBUI_URL
               value: https://openwebui.narwhal-snapper.ts.net
+            - name: TERMINAL_SERVER_CONNECTIONS
+              valueFrom:
+                secretKeyRef:
+                  name: open-terminal
+                  key: TERMINAL_SERVER_CONNECTIONS
             - name: TZ
               value: America/New_York
           envFrom:

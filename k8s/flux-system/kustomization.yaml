@@ -7,4 +7,5 @@ resources:
   - secrets.yaml
   - tailscale.yaml
   - open-webui.yaml
+  - open-terminal.yaml
   - comfyui.yaml
