@@ -19,9 +19,9 @@
         self.nixosModules.default
         self.nixosModules.k3s
         self.nixosModules.lanzaboote
+        self.nixosModules.lemonade
         self.nixosModules.morgan
         self.nixosModules.ollama
-        self.nixosModules.strata
         self.nixosModules.tailscale
         self.nixosModules.vermilion
         self.nixosModules.wifi

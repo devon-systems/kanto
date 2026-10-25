@@ -65,7 +65,7 @@ spec:
             - name: ENABLE_OPENAI_API
               value: "true"
             - name: OPENAI_API_BASE_URL
-              value: http://$(VERMILION_IP):8095/v1
+              value: http://$(VERMILION_IP):13305/api/v1
             - name: OPENAI_API_KEY
               value: unused
             - name: ENABLE_OLLAMA_API
