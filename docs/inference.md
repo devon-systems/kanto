@@ -194,13 +194,13 @@ those services to Kanto.
 
 ## Discover and manage models
 
-The WebUI model picker serves Lemonade models. API clients can list the models
-available to their account through `/api/models`. The existing Qwen API IDs
+The WebUI model picker combines Ollama and Lemonade models. Current models
+are hosted by Lemonade. API clients can list the models available to their account through `/api/models`. The existing Qwen API IDs
 remain available as WebUI aliases backed by Lemonade.
 
 ### Manage Ollama models
 
-Ollama remains configured with ROCm, but its WebUI connection is disabled.
+Ollama runs with ROCm and remains available in WebUI for additional models.
 Download or inspect its models directly on Vermilion:
 
 ```sh
@@ -235,6 +235,7 @@ configuration.
 In Open WebUI, open **Chat Controls → Advanced Parameters**. Use the control
 for the selected backend:
 
+- For models hosted by Ollama, use **Think (Ollama)**.
 - For Strata through Lemonade, set **Reasoning Effort** to **Custom** and enter
   a level supported by that model.
 - Other Lemonade models use their own chat templates and supported reasoning
