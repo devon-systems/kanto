@@ -45,6 +45,5 @@ _: {
           repository = "rclone:b2:aly-backups/kanto/vermilion/comfyui";
         };
     };
-    systemd.tmpfiles.rules = ["d /var/lib/rancher/k3s/storage 0755 root root -"];
   };
 }

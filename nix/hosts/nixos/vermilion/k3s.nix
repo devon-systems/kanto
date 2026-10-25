@@ -24,6 +24,8 @@ _: {
       };
     };
 
+    systemd.tmpfiles.rules = ["d /var/lib/rancher/k3s/storage 0755 root root -"];
+
     networking.firewall.interfaces = {
       cni0.allowedTCPPorts = [6443];
       ${config.services.tailscale.interfaceName}.allowedTCPPorts = [6443];

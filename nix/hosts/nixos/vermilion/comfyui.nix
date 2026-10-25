@@ -1,5 +1,9 @@
 _: {
-  flake.nixosModules.vermilion = {pkgs, ...}: let
+  flake.nixosModules.vermilion = {
+    config,
+    pkgs,
+    ...
+  }: let
     python = pkgs.python3.override {
       packageOverrides = final: prev: {
         torch = prev.torch.override {
@@ -10,6 +14,15 @@ _: {
       };
     };
   in {
-    services.comfyui.package = pkgs.comfyui.override {python3 = python;};
+    services.comfyui = {
+      enable = true;
+      listen = ["0.0.0.0"];
+      package = pkgs.comfyui.override {python3 = python;};
+    };
+
+    users.users.comfyui.extraGroups = ["render" "video"];
+
+    # HTTPS reaches this service through the in-cluster proxy.
+    networking.firewall.interfaces.cni0.allowedTCPPorts = [config.services.comfyui.port];
   };
 }

@@ -1,8 +1,12 @@
 _: {
-  flake.nixosModules.vermilion = {
+  flake.nixosModules.vermilion = {config, ...}: {
     hardware.amd-npu = {
       gpuTarget = "gfx1151";
-      lemonade.settings.max_loaded_models = 1;
+      lemonade = {
+        host = "0.0.0.0";
+        allowedOrigins = ["https://openwebui.narwhal-snapper.ts.net"];
+        settings.max_loaded_models = 1;
+      };
       strata = {
         enable = true;
         quant = "UD-IQ4_XS";
@@ -12,5 +16,7 @@ _: {
         expertCache = 14000;
       };
     };
+
+    networking.firewall.interfaces.cni0.allowedTCPPorts = [config.hardware.amd-npu.lemonade.port];
   };
 }
