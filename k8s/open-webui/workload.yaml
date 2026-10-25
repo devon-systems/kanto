@@ -62,6 +62,12 @@ spec:
               value: /api/models,/api/chat/completions
             - name: ENABLE_PERSISTENT_CONFIG
               value: "false"
+            - name: ENABLE_TITLE_GENERATION
+              value: "false"
+            - name: ENABLE_TAGS_GENERATION
+              value: "false"
+            - name: ENABLE_FOLLOW_UP_GENERATION
+              value: "false"
             - name: ENABLE_OPENAI_API
               value: "true"
             - name: OPENAI_API_BASE_URL
