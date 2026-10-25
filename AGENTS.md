@@ -19,7 +19,7 @@ For Kubernetes changes, update Kustomize resource lists and Flux dependencies to
 After `facter.json` changes, run:
 
 ```sh
-nix run github:devon-systems/infra#generate-host-readmes
+nix run github:devon-systems/dvnpkgs#generate-host-readmes
 ```
 
 Never invent or copy hardware reports or edit generated host-spec sections.
