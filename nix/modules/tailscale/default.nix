@@ -10,10 +10,9 @@ _: {
       authKeyFile = config.sops.secrets.tailscale-auth-key.path;
       openFirewall = true;
       # Keep the host's port policy under NixOS firewall control.
-      extraUpFlags = ["--accept-routes=false" "--netfilter-mode=off"];
+      extraUpFlags = ["--ssh" "--accept-routes=false" "--netfilter-mode=off"];
     };
 
-    # Use OpenSSH keys for shared-node logins, and keep Ollama off the tailnet.
     networking.firewall.interfaces.${config.services.tailscale.interfaceName}.allowedTCPPorts = [22];
   };
 }

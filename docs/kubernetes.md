@@ -84,8 +84,9 @@ nodes remain shareable across tailnets. HTTPS terminates in each ingress proxy.
 
 Share each service node with Morgan through the Tailscale Machines page.
 Sharing the operator controller or Vermilion does not share those service
-nodes. Share Vermilion separately if Morgan needs SSH access, then use ordinary
-OpenSSH with the Linux username `morgan`.
+nodes. Vermilion uses Tailscale SSH for tailnet connections and OpenSSH keys
+for LAN connections. Sharing Vermilion separately does not grant SSH access
+by itself; the tailnet's SSH policy must permit the user and Linux account.
 
 Host Tailscale runs with `--netfilter-mode=off`; NixOS controls host port access.
 Inference backend ports accept traffic through the local pod bridge. Clients
