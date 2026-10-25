@@ -12,7 +12,6 @@ _: {
 
       settings.excludes = [
         "secrets/**"
-        "k8s/secrets/*.sops.yaml"
         "k8s/flux-system/gotk-components.yaml"
       ];
     };
