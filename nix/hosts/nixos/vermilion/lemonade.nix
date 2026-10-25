@@ -30,6 +30,7 @@ _: {
         };
         settings = {
           max_loaded_models = 1;
+          auto_evict = false;
           llamacpp.backend = "rocm";
         };
       };
@@ -40,7 +41,11 @@ _: {
         contextSize = 262144;
         extraArgs = [
           "--conversation-cache-mib"
-          "8192"
+          "16384"
+          "--conversation-cache-slots"
+          "16"
+          "--conversation-cache-min-tokens"
+          "2048"
           "--kv-resident"
           "32768"
         ];
