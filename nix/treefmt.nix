@@ -1,0 +1,20 @@
+_: {
+  perSystem = {
+    treefmt.config = {
+      programs = {
+        alejandra.enable = true;
+        deadnix.enable = true;
+        prettier.enable = true;
+        shellcheck.enable = true;
+        shfmt.enable = true;
+        statix.enable = true;
+      };
+
+      settings.excludes = [
+        "secrets/**"
+        "k8s/secrets/*.sops.yaml"
+        "k8s/flux-system/gotk-components.yaml"
+      ];
+    };
+  };
+}

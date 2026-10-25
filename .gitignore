@@ -1,0 +1,10 @@
+.DS_Store
+.bootstrap/
+.direnv
+__pycache__/
+.helix/
+node_modules/
+.pre-commit-config.yaml
+.vscode/
+.zed/
+result

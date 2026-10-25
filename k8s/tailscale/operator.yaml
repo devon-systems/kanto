@@ -1,0 +1,44 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: tailscale
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://pkgs.tailscale.com/helmcharts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: tailscale-operator
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+      version: 1.104.2
+  install:
+    createNamespace: false
+  interval: 30m
+  releaseName: tailscale-operator
+  targetNamespace: tailscale
+  values:
+    operatorConfig:
+      hostname: kanto-operator
+      defaultTags:
+        - tag:kanto-operator
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+    proxyConfig:
+      defaultTags: tag:kanto-service
+  valuesFrom:
+    - kind: Secret
+      name: tailscale-operator-values
+      valuesKey: values.yaml

@@ -1,0 +1,134 @@
+# just is a command runner, Justfile is very similar to Makefile, but simpler.
+############################################################################
+#
+#  Common recipes
+#
+############################################################################
+
+# List all recipes
+_default:
+    @printf '\033[1;36mnixcfg recipes\033[0m\n\n'
+    @printf '\033[1;33mUsage:\033[0m just <recipe> [args...]\n\n'
+    @just --list --list-heading $'Available recipes:\n\n'
+
+# Update flake inputs
+[group('flake')]
+update *inputs:
+    nix flake update {{ inputs }} --commit-lock-file
+
+# Update all nixpkgs inputs
+[group('flake')]
+update-nixpkgs: (update "nixpkgs")
+
+############################################################################
+#
+#  Secrets (sops + age)
+#
+############################################################################
+
+# Derive this machine's age private key from its ssh ed25519 key, install
+# at ~/.config/sops/age/keys.txt. Run once per machine. The corresponding
+# public key (age1...) must already be a recipient in .sops.yaml.
+[group('secrets')]
+sops-bootstrap:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f ~/.config/sops/age/keys.txt ]]; then
+        echo "~/.config/sops/age/keys.txt already exists; skipping."
+        exit 0
+    fi
+    mkdir -p ~/.config/sops/age
+    ssh-to-age -private-key -i ~/.ssh/id_ed25519 > ~/.config/sops/age/keys.txt
+    chmod 600 ~/.config/sops/age/keys.txt
+    echo "wrote ~/.config/sops/age/keys.txt"
+    echo "this machine's age recipient (must be in .sops.yaml):"
+    ssh-to-age -i ~/.ssh/id_ed25519.pub
+
+# Regenerate SOPS recipients and re-encrypt host and Kubernetes secrets
+[group('secrets')]
+sops-rekey:
+    bash scripts/sops-rekey.sh
+
+# Edit a sops-encrypted secrets file. Usage: just sops-edit tailscale.yaml
+[group('secrets')]
+[positional-arguments]
+sops-edit FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "$1" in
+        secrets/*|k8s/secrets/*) sops "$1" ;;
+        *) sops "secrets/$1" ;;
+    esac
+
+############################################################################
+#
+#  Kubernetes
+#
+############################################################################
+
+cluster := "kanto"
+
+# Render and validate Flux targets and local Helm releases
+[group('kubernetes')]
+check-k8s:
+    nix run .#check-k8s
+
+# Reconcile a Flux Kustomization in this repository's cluster
+[group('kubernetes')]
+[positional-arguments]
+reconcile name="flux-system":
+    flux --context "{{cluster}}" reconcile kustomization "$1" --with-source
+
+# Show reconciliation status in this repository's cluster
+[group('kubernetes')]
+flux-status:
+    flux --context "{{cluster}}" get all --all-namespaces
+
+# Fetch a server kubeconfig and name its context after this repository
+[group('kubernetes')]
+[positional-arguments]
+kubeconfig host api_address:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    umask 077
+    temporary=$(mktemp -d)
+    trap 'rm -rf "$temporary"' EXIT
+    ssh "root@$1" 'cat /etc/rancher/k3s/k3s.yaml' > "$temporary/config"
+    kubectl --kubeconfig="$temporary/config" config rename-context default "{{cluster}}" > /dev/null
+    kubectl --kubeconfig="$temporary/config" config set-cluster default --server="https://$2:6443" > /dev/null
+    mkdir -p "$HOME/.kube"
+    install -m 600 "$temporary/config" "$HOME/.kube/{{cluster}}"
+    echo "Saved context {{cluster}} to $HOME/.kube/{{cluster}}. Select it with kubeswitch before using Flux."
+
+# Bootstrap the checked-in Flux version with an age identity and Git SSH key
+[group('kubernetes')]
+[positional-arguments]
+flux-bootstrap AGE_KEY_FILE SSH_KEY_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    temporary=$(mktemp -d)
+    trap 'rm -rf "$temporary"' EXIT
+    chmod 700 "$temporary"
+    case "$1" in
+        *.yaml|*.yml) sops --decrypt --extract '["AGE_KEY"]' "$1" > "$temporary/age.agekey" ;;
+        *) cp "$1" "$temporary/age.agekey" ;;
+    esac
+    chmod 600 "$temporary/age.agekey"
+    recipient=$(age-keygen -y "$temporary/age.agekey")
+    if [[ "$recipient" != "$(cat keys/flux_k8s.pub)" ]]; then
+        echo "Age identity does not match keys/flux_k8s.pub. Rekey Kubernetes secrets before bootstrapping a new identity." >&2
+        exit 1
+    fi
+    test -r "$2"
+    remote=$(git remote get-url origin)
+    case "$remote" in
+        git@*:*) remote="ssh://${remote/:/\/}" ;;
+        ssh://*) ;;
+        *) echo "Flux bootstrap requires an SSH origin URL." >&2; exit 1 ;;
+    esac
+    kubectl --context "{{cluster}}" apply --server-side --field-manager=flux -f k8s/flux-system/gotk-components.yaml
+    kubectl --context "{{cluster}}" wait --for=condition=Established --timeout=60s crd/gitrepositories.source.toolkit.fluxcd.io crd/kustomizations.kustomize.toolkit.fluxcd.io crd/helmreleases.helm.toolkit.fluxcd.io
+    kubectl --context "{{cluster}}" -n flux-system create secret generic sops-age --from-file=age.agekey="$temporary/age.agekey" --dry-run=client -o yaml | kubectl --context "{{cluster}}" apply -f -
+    flux --context "{{cluster}}" create secret git flux-system --url="$remote" --private-key-file="$2" --export | kubectl --context "{{cluster}}" apply -f -
+    kubectl --context "{{cluster}}" apply -f k8s/flux-system/gotk-sync.yaml
+    flux --context "{{cluster}}" reconcile kustomization flux-system --with-source
