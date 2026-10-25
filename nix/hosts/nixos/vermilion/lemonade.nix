@@ -49,6 +49,8 @@ _: {
       };
     };
 
+    systemd.services.lemond.environment.STRATA_PREFILL_STREAM_MIN = "128";
+
     networking.firewall.interfaces.cni0.allowedTCPPorts = [config.hardware.amd-npu.lemonade.port];
   };
 }
