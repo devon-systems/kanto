@@ -1,7 +1,7 @@
 # Use Kanto models
 
-Connect Tailscale before opening Kanto services or using the API. Users on
-another tailnet must accept the relevant service-node share first.
+Connect Tailscale before opening Kanto services or using the API. If you use
+another tailnet, accept the relevant shared node first.
 
 | Service              | Address                                        | Authentication               |
 | -------------------- | ---------------------------------------------- | ---------------------------- |
@@ -13,27 +13,166 @@ another tailnet must accept the relevant service-node share first.
 ## Sign in and create an API key
 
 Use your WebUI account for chat. Linux login credentials are separate. An
-administrator provisions accounts and grants API-key access as described in
+administrator creates accounts and grants model and API-key access as described in
 [cluster operations](kubernetes.md#configure-accounts-and-secrets).
 
-Create an API key in WebUI's account settings. Keep the key in your client's
-secret store. The API-key allowlist permits `/api/models` and
-`/api/chat/completions`; it does not expose native Ollama routes, model
-management, embeddings, or the Responses API.
+Confirm that you can select a model in WebUI. If the list is empty, ask an
+administrator to grant your account model access.
+
+Create a personal API key in WebUI's account settings. If the option is
+unavailable, ask an administrator to enable API-key access for your account.
+The key permits requests to `/api/models` and `/api/chat/completions`. Native
+Ollama routes, model management, embeddings, and the Responses API are unavailable.
 
 ## Connect clients
 
 Choose an OpenAI-compatible **Chat Completions** provider and use the API base
-URL in the table above. The client appends `/chat/completions`; do not append
-`/v1` to the base URL. Supply the WebUI key as the bearer credential and select
-an exact model ID from `/api/models`.
+URL in the table above. Keep the `/api` suffix. The client appends
+`/chat/completions`, so do not add that path or `/v1` to the base URL. Use your
+WebUI API key for authentication and an exact model ID from `/api/models`.
 
 Hoenn configures a `kanto` provider for both OpenCode and Hermes, using its
 SOPS-managed WebUI key. In OpenCode, select Kanto through `/models`. In Hermes,
 select a model with `/model custom:kanto:<model-id>`.
 
-On other machines, follow [Connect OpenCode and Hermes to Kanto](agent-clients.md)
-for client configuration, credentials, and model selection without Nix.
+On other machines, configure the clients below. Keep the API key in your
+client's credential store or private user configuration. Do not commit it to a
+project repository.
+
+### Configure OpenCode
+
+Run `opencode --version` to choose the matching example. Merge the settings
+into `~/.config/opencode/opencode.json`. Keep your existing settings.
+A project-level `opencode.json` also works if you want Kanto only in that project.
+
+#### OpenCode v2
+
+Add this provider configuration:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "kanto": {
+      "name": "Kanto",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "https://openwebui.narwhal-snapper.ts.net/api"
+      },
+      "models": {
+        "Qwen3.8-Flash-Next-Strata": {
+          "name": "Qwen Strata",
+          "limit": { "context": 131072 }
+        },
+        "qwen3.6:35b-a3b-mtp-q4_K_M": {
+          "name": "Qwen 3.6 MTP",
+          "limit": { "context": 65536 }
+        }
+      }
+    }
+  }
+}
+```
+
+1. Start OpenCode.
+2. Run `/connect` and choose `kanto`.
+3. Enter your WebUI API key.
+4. Run `/models` and select a Kanto model.
+
+See the upstream [v2 provider guide](https://dev.opencode.ai/v2/docs/providers/)
+and [configuration locations](https://dev.opencode.ai/v2/docs/config/).
+
+#### OpenCode v1
+
+Use this configuration instead. Version 1 uses `provider`, `npm`, and `options`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "kanto": {
+      "name": "Kanto",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://openwebui.narwhal-snapper.ts.net/api"
+      },
+      "models": {
+        "Qwen3.8-Flash-Next-Strata": {
+          "name": "Qwen Strata",
+          "limit": { "context": 131072, "output": 16384 }
+        }
+      }
+    }
+  }
+}
+```
+
+1. Start OpenCode.
+2. Run `/connect` and select **Other**.
+3. Enter `kanto` as the provider ID.
+4. Paste your WebUI API key.
+5. Run `/models` and select **Qwen Strata**.
+
+The example sets a client output limit of 16,384 tokens. See the [v1 custom-provider guide](https://opencode.ai/docs/providers/#custom-provider).
+
+For either version, keep the key in OpenCode's credential store rather than
+adding it to a project file. To select Strata as your default, add
+`"model": "kanto/Qwen3.8-Flash-Next-Strata"` at the top level of the config.
+
+### Configure Hermes
+
+1. Run `hermes model` in your terminal, outside a chat session.
+2. Select the custom endpoint option.
+3. Enter `https://openwebui.narwhal-snapper.ts.net/api` as the base URL.
+4. Enter your personal WebUI API key.
+5. Select **Chat Completions** when prompted for the API mode.
+6. Enter `Qwen3.8-Flash-Next-Strata` or another model ID available to your account.
+
+Alternatively, add a named provider to `~/.hermes/config.yaml`:
+
+```yaml
+providers:
+  kanto:
+    api: https://openwebui.narwhal-snapper.ts.net/api
+    api_key: "PASTE_YOUR_PERSONAL_WEBUI_KEY_HERE"
+    transport: chat_completions
+    default_model: Qwen3.8-Flash-Next-Strata
+    models:
+      Qwen3.8-Flash-Next-Strata:
+        context_length: 131072
+      qwen3.6:35b-a3b-mtp-q4_K_M:
+        context_length: 65536
+```
+
+Replace the placeholder locally and keep this file private. On Linux or macOS,
+run `chmod 600 ~/.hermes/config.yaml`. Merge the `kanto` entry into an existing
+`providers` mapping rather than creating a duplicate mapping.
+
+Start Hermes and select the named provider:
+
+```text
+/model custom:kanto:Qwen3.8-Flash-Next-Strata
+```
+
+Use `/model` to switch between configured models. Use `hermes model` to add or
+change endpoints. If the setup wizard saved a different provider name, use that
+name in place of `kanto`. See the [Hermes provider guide](https://hermes-agent.nousresearch.com/docs/integrations/providers/).
+
+### Verify the connection
+
+Start a new chat and ask for a short reply. Then ask the agent to list the files
+in a test directory to verify a complete tool call.
+
+- If the service is unreachable, check Tailscale and the `openwebui` node share.
+- For authentication errors, check your WebUI API key and API-key permission.
+- For missing models, check the exact ID and your account's model access grants.
+- For endpoint errors, check the `/api` base URL and Chat Completions transport.
+
+For reasoning settings and their precedence, see
+[Set reasoning effort](#set-reasoning-effort). A setting in a WebUI
+browser chat does not configure these clients. Hermes auxiliary tasks and
+client tools can have separate providers. Selecting Kanto for chat does not
+automatically move those services to Kanto.
 
 ## Discover and manage models
 
@@ -48,13 +187,13 @@ ollama list
 ollama ps
 ```
 
-Ollama stores downloads in `/var/lib/ollama/models`. These downloads are runtime
-state, not a declarative model inventory in this repository.
+Ollama stores downloads in `/var/lib/ollama/models`. The repository does not
+manage the downloaded model list.
 
 Lemonade manages Strata through the `nix-amd-ai` module. Its preparation service
-provisions the configured model assets. Model selection, quantization, and
-cache settings live in `nix/hosts/nixos/vermilion/lemonade.nix`; Lemonade's model
-cache is under `/var/lib/lemonade/models`.
+prepares the configured model files. Set the model, quantization, and cache
+options in `nix/hosts/nixos/vermilion/lemonade.nix`. Lemonade stores models under
+`/var/lib/lemonade/models`.
 
 Ollama, Lemonade, and ComfyUI share the host's memory and GPU. Their independent
 model limits do not coordinate memory use across services. Unload an idle
@@ -62,8 +201,8 @@ Ollama model with `ollama stop <model>` when another workload needs room.
 
 When comparing configurations, keep the model, prompt, context, and competing
 workloads consistent. Compare cold and warm time to first token as well as
-generation speed and memory use. Runtime and hardware settings belong in the
-host configuration rather than client-specific workarounds.
+generation speed and memory use. Set runtime and hardware options in the
+host configuration.
 
 ## Set reasoning effort
 
@@ -112,7 +251,7 @@ For Strata requests through WebUI, the precedence is:
 For example, a client request with `"reasoning_effort": "low"` uses low
 effort even if the saved model default is high. Client menus can expose levels
 that Strata does not support. Choose `none`, `low`, `medium`, or `high`, and
-ensure that the client sends the selected value in its Chat Completions request.
+check that the client sends the selected value in its Chat Completions request.
 
 As checked on October 25, 2026, Kanto has no Strata reasoning override in the
 backend configuration or saved WebUI model parameters. Requests without an
@@ -125,22 +264,22 @@ Enable Terminal in WebUI and select **Kanto workspace** for server-side code
 execution. This is separate from WebUI's browser-based code interpreter.
 
 Each WebUI user gets a persistent home directory in the shared
-`open-terminal-home` volume. Users share one container and its resource limits;
-these are separate workspaces, not separate containers.
+`open-terminal-home` volume. Users share one container and its resource limits.
+Each home directory is a workspace within that container.
 
 The terminal can reach the public IPv4 internet for downloads and package
 installation. Its network policy blocks private LAN, cluster, and tailnet
 destinations, apart from cluster DNS. It has no host filesystem or Docker
-socket mounted. Files in the home directory survive container replacement;
-other container-local changes may not.
+socket mounted. Files in the home directory survive container replacement.
+Changes elsewhere in the container may not.
 
 ## Use ComfyUI
 
 ComfyUI runs on Vermilion with a ROCm-enabled package. Its Tailscale node is
-shared separately from WebUI. Access grants use of the common workspace,
-uploads, outputs, and job queue; there is no separate application login.
+shared separately from WebUI. Anyone with access can use the common workspace,
+uploads, outputs, and job queue. ComfyUI has no separate application login.
 
 State lives in `/var/lib/comfyui`. Add model files and custom nodes there as
-needed; the Nix configuration does not install a collection of them. Backups
-exclude downloaded models and temporary files. Coordinate memory-heavy image
+needed. The Nix configuration does not install them. Backups exclude downloaded
+models and temporary files. Coordinate memory-heavy image
 jobs with Ollama and Lemonade workloads.

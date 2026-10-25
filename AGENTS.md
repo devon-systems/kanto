@@ -1,8 +1,8 @@
 # Work in Kanto
 
-Kanto is the shared inference and infrastructure cluster. Vermilion is its first
-NixOS host. Follow Hoenn's flake-parts and import-tree module layout and the
-Comin, Flux, SOPS, and Renovate workflows used by Hoenn and Johto.
+Kanto runs shared inference and infrastructure on Vermilion. Follow Hoenn's
+flake-parts and import-tree module layout. Use the Comin, Flux, SOPS, and
+Renovate workflows shared by Hoenn and Johto.
 
 Keep host state in `nix/hosts/nixos/<host>/`, reusable features in
 `nix/modules/<feature>/`, and common NixOS defaults in `nix/modules/default/`.
@@ -34,7 +34,7 @@ nix run github:devon-systems/infra#generate-host-readmes
 Do not invent hardware reports, copy another host's report, or hand-edit the
 generated host-spec sections.
 
-## Commit messages
+## Write commit messages
 
 Use scoped Conventional Commits, such as
 `feat(open-webui): add shared chat and API access`.
@@ -42,7 +42,8 @@ Use scoped Conventional Commits, such as
 ## Deploy deliberately
 
 Comin reconciles host configuration from `master`. Flux reconciles applications
-from `master`. Follow `docs/kubernetes.md` for bootstrap and operations.
+from `master`. Follow [cluster operations](docs/kubernetes.md) for bootstrap
+and operations.
 
 Manual deployment, forced reconciliation, and restarts of deployment services
 require an explicit user request. Never deploy to test a configuration. Run
@@ -59,5 +60,5 @@ identity into Kanto. Never print private keys or decrypted credentials.
 ## Preserve shared access
 
 Open WebUI and ComfyUI use standalone Tailscale operator Ingress nodes. Do not
-add `tailscale.com/proxy-group` annotations to them. Their individual nodes must
-remain shareable with Morgan on her own tailnet.
+add `tailscale.com/proxy-group` annotations to them. Keep each node shareable
+with Morgan on her own tailnet.

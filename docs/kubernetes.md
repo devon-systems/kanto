@@ -1,8 +1,7 @@
 # Operate the Kanto cluster
 
-Vermilion runs the Kanto k3s server and host-level inference services. Comin
-reconciles NixOS from `master`; Flux reconciles the applications composed by
-`k8s/flux-system/`.
+Vermilion runs k3s and the inference services. Comin deploys NixOS from
+`master`. Flux deploys the applications defined in `k8s/flux-system/`.
 
 ## Validate and deploy a host
 
@@ -25,7 +24,7 @@ Hardware reports, disk layouts, and host configuration live under
 ## Bootstrap Flux
 
 Use this procedure for initial setup or cluster recovery. Fetch the kubeconfig
-through OpenSSH:
+over SSH:
 
 ```sh
 just kubeconfig vermilion vermilion.narwhal-snapper.ts.net
@@ -33,8 +32,8 @@ export KUBECONFIG="$HOME/.kube/kanto"
 ```
 
 The recipe writes administrator credentials with mode 0600. The host firewall
-permits the Kubernetes API on its Tailscale interface; tailnet policy must also
-permit the administrator's device to reach port 6443.
+permits the Kubernetes API on its Tailscale interface. The tailnet policy must
+also permit your device to reach port 6443.
 
 Use a repository-scoped SSH deploy key registered as read-only on
 `devon-systems/kanto`. With the private key stored at `~/.ssh/kanto-flux`:
@@ -44,30 +43,32 @@ just flux-bootstrap secrets/flux-age.yaml ~/.ssh/kanto-flux
 just flux-status
 ```
 
-The recipe verifies that the age identity matches `keys/flux_k8s.pub`, installs
-the checked-in Flux controllers, and creates the Git and decryption Secrets.
-It then applies the Flux sync resources. The dependencies in
+The recipe verifies that the age identity matches `keys/flux_k8s.pub`. It
+installs the checked-in Flux controllers and creates the Git and decryption
+Secrets, then applies the Flux sync resources. The dependencies in
 `k8s/flux-system/` order namespaces, secrets, networking, and applications.
 
 ## Configure accounts and secrets
 
-Aly has SSH access through `keys/aly_*.pub`, passwordless sudo, and a
-SOPS-managed console password. SSH password authentication is disabled.
+Aly has passwordless sudo and a SOPS-managed console password. OpenSSH uses
+`keys/aly_*.pub` for key authentication and rejects password authentication.
+Tailscale SSH uses the tailnet policy.
 Morgan is a regular Linux user with a locked password. Add her SSH public key
 as `keys/morgan_<device>.pub` to enable key-based login.
 
 Linux and Open WebUI accounts are separate. WebUI signup is disabled. Its
 bootstrap administrator credentials come from
 `k8s/secrets/open-webui.sops.yaml` and apply when the database is empty.
-Manage subsequent application accounts and API-key permissions in WebUI's
-administration interface.
+Manage application accounts, model access grants, and API-key permissions in
+WebUI's administration interface. Grant model access to regular users before
+they connect. An active account alone does not make models visible.
 
 Host secrets use Aly's administrator keys and `keys/root_*.pub`. Kubernetes
 secrets also include Kanto's Flux age recipient. Morgan's login keys do not
 become SOPS recipients. After changing administrator or host keys, run
 `just sops-rekey` and commit `.sops.yaml` with all re-encrypted secrets.
 
-Edit credentials with `just sops-edit`; never copy encrypted secrets from
+Edit credentials with `just sops-edit`. Never copy encrypted secrets from
 another cluster without re-encrypting them for Kanto. The cluster token,
 Flux age identity, operator credentials, and WebUI signing key belong to Kanto.
 
@@ -86,13 +87,13 @@ Share each service node with Morgan through the Tailscale Machines page.
 Sharing the operator controller or Vermilion does not share those service
 nodes. Vermilion uses Tailscale SSH for tailnet connections and OpenSSH keys
 for LAN connections. Sharing Vermilion separately does not grant SSH access
-by itself; the tailnet's SSH policy must permit the user and Linux account.
+by itself. The tailnet's SSH policy must permit the user and Linux account.
 
-Host Tailscale runs with `--netfilter-mode=off`; NixOS controls host port access.
+Host Tailscale runs with `--netfilter-mode=off`. NixOS controls host port access.
 Inference backend ports accept traffic through the local pod bridge. Clients
 use WebUI authentication rather than connecting to the raw model servers.
-Review the complete tailnet policy when narrowing access: an additional narrow
-grant does not override an existing broad allow.
+When restricting access, review all matching rules in the tailnet policy.
+A narrow grant does not override an existing broad allow.
 
 ## Add workloads and nodes
 
@@ -107,33 +108,32 @@ Add host keys, rekey secrets, and register the host with `blzrd`.
 WebUI and the ComfyUI proxy currently select Vermilion and reach their host
 backends through `status.hostIP`. Local-path volumes also remain on their
 node. Adding another inference host requires explicit backend routing and
-storage decisions; adding a NixOS configuration alone does not distribute
+storage decisions. Adding a NixOS configuration alone does not distribute
 these services.
 
-## Backups and recovery
+## Restore backups
 
 Vermilion's Restic jobs back up etcd snapshots, k3s credentials, local-path
-volumes, and ComfyUI state under `aly-backups/kanto/vermilion/`. Downloaded
-ComfyUI models and temporary files are excluded. Ollama and Lemonade model
-stores are not included in these jobs.
+volumes, and ComfyUI state under `aly-backups/kanto/vermilion/`. The jobs exclude
+downloaded ComfyUI models, temporary files, and the Ollama and Lemonade model stores.
 
 The local-path backup is a file backup, not an application-consistent database
 snapshot. Stop WebUI or capture a consistent SQLite backup before relying on
-a particular database recovery point. Open Terminal home directories are
-persisted in the `open-terminal-home` local-path volume.
+a particular database recovery point. Open Terminal stores home directories
+in the `open-terminal-home` local-path volume.
 
 Preserve the cluster token, Flux age identity, WebUI signing key, application
 data, and Tailscale ingress proxy state. Restoring the proxy state retains the
-node identity shared with Morgan. If a proxy is recreated with a new identity,
-share that replacement node again.
+node identity shared with Morgan. If you recreate a proxy with a new identity,
+share the replacement node again.
 
 Follow the shared [k3s recovery guide](https://github.com/devon-systems/infra/blob/master/docs/k3s-control-plane-recovery.md).
 
-## Automatic updates
+## Manage automatic updates
 
 Renovate opens dependency updates. Routine minor, patch, digest, pin, and lock
-maintenance updates can automerge after the required flake, dev-shell, host
-build, and Kubernetes checks pass. The `check-k8s` job validates manifests and
+maintenance updates can merge automatically after the required checks pass.
+These checks cover the flake, development shell, host build, and Kubernetes resources. The `check-k8s` job validates manifests and
 blocks merging when validation fails. Major updates remain manual.
 `CACHIX_AUTH_TOKEN` enables CI uploads to the shared binary cache.
 
