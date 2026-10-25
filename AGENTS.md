@@ -14,7 +14,7 @@ Use the pinned development shell. Before committing, run `nix fmt` and `nix flak
 nix build .#nixosConfigurations.<host>.config.system.build.toplevel
 ```
 
-For Kubernetes changes, update Kustomize resource lists and Flux dependencies together. Never reformat `k8s/flux-system/gotk-components.yaml`. Run `just check-k8s`; it renders the Flux graph and local Helm releases and validates remote Helm declarations without rendering their charts.
+For Kubernetes changes, update Kustomize resource lists and Flux dependencies together. Never reformat `k8s/flux-system/gotk-components.yaml`. Run `just check-k8s`; it renders the Flux graph and local Helm releases and validates remote Helm declarations. It also renders the pinned Tailscale operator Deployment with public values to verify resource settings; other remote charts remain unrendered.
 
 After `facter.json` changes, run:
 
