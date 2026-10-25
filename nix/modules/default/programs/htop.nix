@@ -1,5 +1,5 @@
 _: {
-  flake.nixosModules.default = {pkgs, ...}: {
-    environment.systemPackages = [pkgs.htop];
+  flake.nixosModules.default = {
+    programs.htop.enable = true;
   };
 }

@@ -5,7 +5,7 @@ _: {
       initialize = true;
       passwordFile = config.sops.secrets.restic-password.path;
       rcloneConfigFile = config.sops.secrets.rclone-b2.path;
-      pruneOpts = ["--keep-daily 7" "--keep-weekly 4" "--keep-monthly 12"];
+      pruneOpts = ["--keep-daily 7" "--keep-weekly 4" "--keep-monthly 3"];
       timerConfig = {
         OnCalendar = "daily";
         Persistent = true;
