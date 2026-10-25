@@ -131,10 +131,10 @@ Follow the shared [k3s recovery guide](https://github.com/devon-systems/infra/bl
 ## Automatic updates
 
 Renovate opens dependency updates. Routine minor, patch, digest, pin, and lock
-maintenance updates can automerge after the required flake, dev-shell, and
-host build checks pass. Major updates remain manual. The Kubernetes workflow
-also validates manifests. `CACHIX_AUTH_TOKEN` enables CI uploads to the shared
-binary cache.
+maintenance updates can automerge after the required flake, dev-shell, host
+build, and Kubernetes checks pass. The `check-k8s` job validates manifests and
+blocks merging when validation fails. Major updates remain manual.
+`CACHIX_AUTH_TOKEN` enables CI uploads to the shared binary cache.
 
 Comin polls `master` every ten minutes and activates host changes. The daily
 NixOS upgrade job uses the committed lock and prepares the next boot without
