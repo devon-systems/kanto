@@ -21,7 +21,9 @@ _: {
       sopsFile = self + "/secrets/aly-password.yaml";
     };
 
+    users.groups.aly = {};
     users.users.aly = {
+      group = "aly";
       description = "Aly Raffauf";
       extraGroups = ["networkmanager" "wheel"];
       hashedPasswordFile = config.sops.secrets.aly-password.path;
