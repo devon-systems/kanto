@@ -8,7 +8,7 @@ _: {
       enable = true;
       host = "0.0.0.0";
       openFirewall = false;
-      package = pkgs.ollama-vulkan;
+      package = pkgs.ollama-rocm;
       environmentVariables = {
         OLLAMA_NO_CLOUD = "1";
         OLLAMA_IGPU_ENABLE = "1";
