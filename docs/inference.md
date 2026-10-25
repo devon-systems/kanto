@@ -67,7 +67,7 @@ replace these examples when your models differ:
       "models": {
         "Qwen3.8-Flash-Next-Strata": {
           "name": "Qwen Strata",
-          "limit": { "context": 131072 }
+          "limit": { "context": 262144 }
         },
         "qwen3.6:35b-a3b-mtp-q4_K_M": {
           "name": "Qwen 3.6 MTP",
@@ -107,7 +107,7 @@ availability and replace this example when your model differs:
       "models": {
         "Qwen3.8-Flash-Next-Strata": {
           "name": "Qwen Strata",
-          "limit": { "context": 131072, "output": 16384 }
+          "limit": { "context": 262144, "output": 16384 }
         }
       }
     }
@@ -154,7 +154,7 @@ providers:
     default_model: Qwen3.8-Flash-Next-Strata
     models:
       Qwen3.8-Flash-Next-Strata:
-        context_length: 131072
+        context_length: 262144
       qwen3.6:35b-a3b-mtp-q4_K_M:
         context_length: 65536
 ```

@@ -37,7 +37,13 @@ _: {
         enable = true;
         quant = "UD-IQ4_XS";
         profile = "fast";
-        extraArgs = ["--conversation-cache-mib" "8192"];
+        contextSize = 262144;
+        extraArgs = [
+          "--conversation-cache-mib"
+          "8192"
+          "--kv-resident"
+          "32768"
+        ];
         # Leave room for the other buffers within the default GTT limit.
         expertCache = 14000;
       };
