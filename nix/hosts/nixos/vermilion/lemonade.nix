@@ -7,6 +7,8 @@ _: {
         enable = true;
         quant = "UD-IQ4_XS";
         profile = "defaults";
+        # Leave room for the other buffers within the default GTT limit.
+        expertCache = 16000;
       };
     };
   };
