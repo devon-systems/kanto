@@ -1,11 +1,15 @@
 _: {
   flake.nixosModules.vermilion = {config, ...}: {
     hardware.amd-npu = {
+      enableROCm = true;
       gpuTarget = "gfx1151";
       lemonade = {
         host = "0.0.0.0";
         allowedOrigins = ["https://openwebui.narwhal-snapper.ts.net"];
-        settings.max_loaded_models = 1;
+        settings = {
+          max_loaded_models = 1;
+          llamacpp.backend = "rocm";
+        };
       };
       strata = {
         enable = true;
