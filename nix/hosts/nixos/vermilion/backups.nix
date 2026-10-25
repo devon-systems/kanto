@@ -34,6 +34,12 @@ _: {
           paths = ["/var/lib/rancher/k3s/storage"];
           repository = "rclone:b2:aly-backups/kanto/vermilion/k3s-local-path";
         };
+      lemonade =
+        backupDefaults
+        // {
+          paths = ["/var/lib/lemonade/.config/lemonade"];
+          repository = "rclone:b2:aly-backups/kanto/vermilion/lemonade";
+        };
       comfyui =
         backupDefaults
         // {

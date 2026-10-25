@@ -127,7 +127,9 @@ these services.
 ## Restore backups
 
 Vermilion's Restic jobs back up etcd snapshots, k3s credentials, local-path
-volumes, and ComfyUI state under `aly-backups/kanto/vermilion/`. The jobs exclude
+volumes, Lemonade configuration, and ComfyUI state under
+`aly-backups/kanto/vermilion/`. Lemonade configuration includes user-added model
+registrations and per-model settings. The jobs exclude
 downloaded ComfyUI models, temporary files, and the Ollama and Lemonade model stores.
 
 The local-path backup is a file backup, not an application-consistent database
