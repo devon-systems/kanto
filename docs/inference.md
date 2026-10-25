@@ -1,78 +1,95 @@
 # Use Kanto models
 
-Open WebUI serves browser chat and authenticated inference at
-`https://openwebui.narwhal-snapper.ts.net`. Connect Tailscale before using
-either interface. Morgan must accept the ingress node share first.
+Connect Tailscale before opening Kanto services or using the API. Users on
+another tailnet must accept the relevant service-node share first.
 
-## Create application accounts
+| Service              | Address                                        | Authentication               |
+| -------------------- | ---------------------------------------------- | ---------------------------- |
+| Open WebUI           | `https://openwebui.narwhal-snapper.ts.net`     | Personal WebUI account       |
+| Chat Completions API | `https://openwebui.narwhal-snapper.ts.net/api` | Personal WebUI API key       |
+| ComfyUI              | `https://comfyui.narwhal-snapper.ts.net`       | Access to its Tailscale node |
+| Open Terminal        | Select **Kanto workspace** in WebUI            | WebUI account                |
 
-Sign in with the administrator identity and bootstrap password from
-`k8s/secrets/open-webui.sops.yaml`. Create Morgan's WebUI account as a regular
-user in the administration interface. Linux and WebUI accounts are separate.
-Keep signup disabled.
+## Sign in and create an API key
 
-Give regular users the API-key permission if they need agent access.
-Each WebUI account currently has one API key. Replacing that key invalidates
-the previous key in every client using it. The initial configuration enables
-API keys and allows model listing and chat completions. Native Ollama routes,
-model management, embeddings, and Responses are excluded from the API-key
-allowlist.
+Use your WebUI account for chat. Linux login credentials are separate. An
+administrator provisions accounts and grants API-key access as described in
+[cluster operations](kubernetes.md#configure-accounts-and-secrets).
 
-## Load and test a model
+Create an API key in WebUI's account settings. Keep the key in your client's
+secret store. The API-key allowlist permits `/api/models` and
+`/api/chat/completions`; it does not expose native Ollama routes, model
+management, embeddings, or the Responses API.
 
-No models are preloaded. Choose a model and quantization after testing the
-actual hardware. From Vermilion, download a model with `ollama pull <model>`.
-The host uses `/var/lib/ollama/models` for model storage.
+## Connect clients
 
-Test a single chat before running both users' agents. Then test two concurrent
-64K sessions, tool calls, time to first token, and memory pressure. Hermes
-currently requires at least 64K context. A model must also support tool calling
-and the runtime must format those calls correctly.
+Choose an OpenAI-compatible **Chat Completions** provider and use the API base
+URL in the table above. The client appends `/chat/completions`; do not append
+`/v1` to the base URL. Supply the WebUI key as the bearer credential and select
+an exact model ID from `/api/models`.
 
-Vulkan is the initial backend. Compare it with `pkgs.ollama-rocm` using the same
-model, context, and parallelism. Record the working kernel, firmware, runtime,
-model revision, and GPU memory configuration before making the host permanent.
+Hoenn configures a `kanto` provider for both OpenCode and Hermes, using its
+SOPS-managed WebUI key. In OpenCode, select Kanto through `/models`. In Hermes,
+select a model with `/model custom:kanto:<model-id>`.
 
-## Connect Hermes
+On other machines, use `hermes model` and choose a custom endpoint, or add an
+OpenAI-compatible provider to OpenCode. Use the same base URL, personal key,
+and model ID. Configure the client's context limit to match the backend's
+configured capacity. A model must support tool calling for agent tasks; test
+streaming and a complete tool call when adding a new model or client.
 
-Run `hermes model` and choose the custom endpoint provider. Set:
+## Discover and manage models
 
-| Setting  | Value                                          |
-| -------- | ---------------------------------------------- |
-| Base URL | `https://openwebui.narwhal-snapper.ts.net/api` |
-| API key  | Your personal Open WebUI key                   |
-| Model    | The exact model ID listed by Open WebUI        |
+The WebUI model picker combines Ollama and Lemonade models. API clients can
+list the models available to their account through `/api/models`.
 
-The client appends `/chat/completions` to the base URL. The WebUI route is
-`/api/chat/completions`, so do not append `/v1` to this base URL.
+Ollama runs with Vulkan. Download or inspect its models on Vermilion:
 
-Test streaming and a complete tool-calling task before relying on this route.
-This repository has not run a real Hermes session against Vermilion yet.
+```sh
+ollama pull <model>
+ollama list
+ollama ps
+```
 
-## Connect other clients
+Ollama stores downloads in `/var/lib/ollama/models`. These downloads are runtime
+state, not a declarative model inventory in this repository.
 
-Use clients that support a custom OpenAI-compatible Chat Completions base URL.
-Set that URL to `https://openwebui.narwhal-snapper.ts.net/api`, select the
-model ID from `/api/models`, and supply your WebUI API key as a bearer token.
-The intended inference endpoint is `/api/chat/completions`.
+Lemonade manages Strata through the `nix-amd-ai` module. Its preparation service
+provisions the configured model assets. Model selection, quantization, and
+cache settings live in `nix/hosts/nixos/vermilion/lemonade.nix`; Lemonade's model
+cache is under `/var/lib/lemonade/models`.
 
-Clients requiring the Responses API or a native Ollama endpoint are outside
-the initial configuration. An OpenAI-compatible label does not guarantee every
-client or tool schema works.
+Ollama, Lemonade, and ComfyUI share the host's memory and GPU. Their independent
+model limits do not coordinate memory use across services. Unload an idle
+Ollama model with `ollama stop <model>` when another workload needs room.
 
-Read the [Open WebUI API reference](https://docs.openwebui.com/reference/api-endpoints/)
-and [Hermes provider guide](https://hermes-agent.nousresearch.com/docs/integrations/providers)
-when configuring clients. Keep raw Ollama access internal. API consumers use
-WebUI authentication and its shared standalone ingress node.
+When comparing configurations, keep the model, prompt, context, and competing
+workloads consistent. Compare cold and warm time to first token as well as
+generation speed and memory use. Runtime and hardware settings belong in the
+host configuration rather than client-specific workarounds.
+
+## Run code with Open Terminal
+
+Enable Terminal in WebUI and select **Kanto workspace** for server-side code
+execution. This is separate from WebUI's browser-based code interpreter.
+
+Each WebUI user gets a persistent home directory in the shared
+`open-terminal-home` volume. Users share one container and its resource limits;
+these are separate workspaces, not separate containers.
+
+The terminal can reach the public IPv4 internet for downloads and package
+installation. Its network policy blocks private LAN, cluster, and tailnet
+destinations, apart from cluster DNS. It has no host filesystem or Docker
+socket mounted. Files in the home directory survive container replacement;
+other container-local changes may not.
 
 ## Use ComfyUI
 
-ComfyUI runs on Vermilion with ROCm at
-`https://comfyui.narwhal-snapper.ts.net`. Share its standalone ingress node
-with Morgan separately. Tailscale access grants access to the shared workspace,
+ComfyUI runs on Vermilion with a ROCm-enabled package. Its Tailscale node is
+shared separately from WebUI. Access grants use of the common workspace,
 uploads, outputs, and job queue; there is no separate application login.
 
-State lives in `/var/lib/comfyui`. Backups exclude downloaded models and
-temporary files. No models or custom nodes are preconfigured. ComfyUI and
-Ollama share GPU memory; unload large Ollama models before memory-heavy image
-jobs. GPU inference still needs validation on the actual hardware.
+State lives in `/var/lib/comfyui`. Add model files and custom nodes there as
+needed; the Nix configuration does not install a collection of them. Backups
+exclude downloaded models and temporary files. Coordinate memory-heavy image
+jobs with Ollama and Lemonade workloads.

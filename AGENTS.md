@@ -5,25 +5,36 @@ NixOS host. Follow Hoenn's flake-parts and import-tree module layout and the
 Comin, Flux, SOPS, and Renovate workflows used by Hoenn and Johto.
 
 Keep host state in `nix/hosts/nixos/<host>/`, reusable features in
-`nix/modules/<feature>/`, common NixOS
-defaults in `nix/modules/default/`. Keep applications in `k8s/<app>/` and their
+`nix/modules/<feature>/`, and common NixOS defaults in `nix/modules/default/`.
+Keep applications in `k8s/<app>/` and their
 Flux Kustomizations in `k8s/flux-system/`.
 
 ## Check a change
 
-Use the pinned development shell. Before committing, run:
+Use the pinned development shell. Run `nix fmt` and `nix flake check` before
+committing. Build each host affected by a Nix change:
 
 ```sh
-nix fmt
-nix flake check
-nix build .#nixosConfigurations.vermilion.config.system.build.toplevel
-just check-k8s
+nix build .#nixosConfigurations.<host>.config.system.build.toplevel
 ```
 
-Update the relevant Kustomize resource lists and Flux dependencies together.
-Do not reformat `k8s/flux-system/gotk-components.yaml`. The Kubernetes check
-renders the Flux graph and local Helm releases. It validates remote Helm
-declarations without rendering their charts.
+Run `just check-k8s` after Kubernetes changes. Update the relevant Kustomize
+resource lists and Flux dependencies together. Do not reformat
+`k8s/flux-system/gotk-components.yaml`. The Kubernetes check renders the Flux
+graph and local Helm releases. It validates remote Helm declarations without
+rendering their charts.
+
+After adding or changing a host's `facter.json`, run the shared host README
+generator:
+
+```sh
+nix run github:devon-systems/infra#generate-host-readmes
+```
+
+Do not invent hardware reports, copy another host's report, or hand-edit the
+generated host-spec sections.
+
+## Commit messages
 
 Use scoped Conventional Commits, such as
 `feat(open-webui): add shared chat and API access`.
@@ -32,11 +43,6 @@ Use scoped Conventional Commits, such as
 
 Comin reconciles host configuration from `master`. Flux reconciles applications
 from `master`. Follow `docs/kubernetes.md` for bootstrap and operations.
-
-This initial repository is a mock. Capture Vermilion's nixos-facter report and
-configure its actual NVMe identifier before installing. Do not invent hardware
-reports or copy another host's report. Run the shared host README generator
-after adding or changing `facter.json`.
 
 Manual deployment, forced reconciliation, and restarts of deployment services
 require an explicit user request. Never deploy to test a configuration. Run
@@ -50,6 +56,8 @@ recipients in `keys/`. Use `just sops-edit` to edit encrypted files. Run
 re-encrypted file. Never copy another cluster's encrypted credentials or Flux
 identity into Kanto. Never print private keys or decrypted credentials.
 
-Open WebUI uses a standalone Tailscale operator Ingress. Do not add a
-`tailscale.com/proxy-group` annotation to it. Its individual ingress node must
+## Preserve shared access
+
+Open WebUI and ComfyUI use standalone Tailscale operator Ingress nodes. Do not
+add `tailscale.com/proxy-group` annotations to them. Their individual nodes must
 remain shareable with Morgan on her own tailnet.
