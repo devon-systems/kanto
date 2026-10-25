@@ -6,7 +6,8 @@ _: {
       strata = {
         enable = true;
         quant = "UD-IQ4_XS";
-        profile = "defaults";
+        profile = "fast";
+        extraArgs = ["--conversation-cache-mib" "8192"];
         # Leave room for the other buffers within the default GTT limit.
         expertCache = 14000;
       };
