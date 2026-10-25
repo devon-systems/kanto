@@ -3,6 +3,7 @@ _: {
     services.ollama = {
       package = pkgs.ollama-vulkan;
       environmentVariables = {
+        OLLAMA_IGPU_ENABLE = "1";
         OLLAMA_MAX_LOADED_MODELS = "1";
         OLLAMA_NUM_PARALLEL = "2";
         OLLAMA_MAX_QUEUE = "8";
