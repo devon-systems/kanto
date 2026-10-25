@@ -73,7 +73,7 @@ spec:
             - name: OPENAI_API_KEY
               value: unused
             - name: ENABLE_OLLAMA_API
-              value: "true"
+              value: "false"
             - name: WEBUI_URL
               value: https://openwebui.narwhal-snapper.ts.net
             - name: TERMINAL_SERVER_CONNECTIONS

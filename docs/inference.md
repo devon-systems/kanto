@@ -194,12 +194,14 @@ those services to Kanto.
 
 ## Discover and manage models
 
-The WebUI model picker combines Ollama and Lemonade models. API clients can
-list the models available to their account through `/api/models`.
+The WebUI model picker serves Lemonade models. API clients can list the models
+available to their account through `/api/models`. The existing Qwen API IDs
+remain available as WebUI aliases backed by Lemonade.
 
 ### Manage Ollama models
 
-Ollama runs with Vulkan. Download or inspect its models on Vermilion:
+Ollama remains configured with ROCm, but its WebUI connection is disabled.
+Download or inspect its models directly on Vermilion:
 
 ```sh
 ollama pull <model>
@@ -233,13 +235,13 @@ configuration.
 In Open WebUI, open **Chat Controls → Advanced Parameters**. Use the control
 for the selected backend:
 
-- For Ollama, set **Think (Ollama)** to **On**, **Off**, or **Custom**. For
-  **Custom**, enter a level supported by that model.
 - For Strata through Lemonade, set **Reasoning Effort** to **Custom** and enter
   a level supported by that model.
+- Other Lemonade models use their own chat templates and supported reasoning
+  parameters. Do not assume that they accept Strata's reasoning levels.
 
-The generic **Reasoning Effort** field does not control native Ollama
-connections. **Reasoning Tags** controls display, not the amount of thinking.
+The **Think (Ollama)** control does not apply to Lemonade, including the Qwen
+aliases. **Reasoning Tags** controls display, not the amount of thinking.
 See
 [Open WebUI's reasoning controls](https://docs.openwebui.com/features/chat-conversations/chat-features/reasoning-models/).
 
