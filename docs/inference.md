@@ -13,23 +13,27 @@ another tailnet, accept the relevant shared node first.
 ## Sign in and create an API key
 
 Use your WebUI account for chat. Linux login credentials are separate. An
-administrator creates accounts and grants model and API-key access as described in
-[cluster operations](kubernetes.md#configure-accounts-and-secrets).
+administrator creates accounts and grants model and API-key access as described
+in [cluster operations](kubernetes.md#configure-accounts-and-secrets).
 
-Confirm that you can select a model in WebUI. If the list is empty, ask an
-administrator to grant your account model access.
+1. Confirm that you can select a model in WebUI. If the list is empty, ask an
+   administrator to grant your account model access.
+2. Create a personal API key in WebUI's account settings. If the option is
+   unavailable, ask an administrator to enable API-key access for your account.
 
-Create a personal API key in WebUI's account settings. If the option is
-unavailable, ask an administrator to enable API-key access for your account.
 The key permits requests to `/api/models` and `/api/chat/completions`. Native
-Ollama routes, model management, embeddings, and the Responses API are unavailable.
+Ollama routes, model management, embeddings, and the Responses API are
+unavailable.
 
 ## Connect clients
 
 Choose an OpenAI-compatible **Chat Completions** provider and use the API base
-URL in the table above. Keep the `/api` suffix. The client appends
-`/chat/completions`, so do not add that path or `/v1` to the base URL. Use your
-WebUI API key for authentication and an exact model ID from `/api/models`.
+URL in the table above.
+
+- Keep the `/api` suffix. The client appends `/chat/completions`, so do not add
+  that path or `/v1` to the base URL.
+- Use your WebUI API key for authentication.
+- Use an exact model ID from `/api/models`.
 
 Hoenn configures a `kanto` provider for both OpenCode and Hermes, using its
 SOPS-managed WebUI key. In OpenCode, select Kanto through `/models`. In Hermes,
@@ -42,12 +46,13 @@ project repository.
 ### Configure OpenCode
 
 Run `opencode --version` to choose the matching example. Merge the settings
-into `~/.config/opencode/opencode.json`. Keep your existing settings.
-A project-level `opencode.json` also works if you want Kanto only in that project.
+into `~/.config/opencode/opencode.json` and keep your existing settings. A
+project-level `opencode.json` also works if you want Kanto only in that project.
 
 #### OpenCode v2
 
-Add this provider configuration:
+Add this provider configuration. Use `/api/models` to check availability and
+replace these examples when your models differ:
 
 ```json
 {
@@ -74,6 +79,8 @@ Add this provider configuration:
 }
 ```
 
+Then connect the provider:
+
 1. Start OpenCode.
 2. Run `/connect` and choose `kanto`.
 3. Enter your WebUI API key.
@@ -84,7 +91,8 @@ and [configuration locations](https://dev.opencode.ai/v2/docs/config/).
 
 #### OpenCode v1
 
-Use this configuration instead. Version 1 uses `provider`, `npm`, and `options`:
+Version 1 uses `provider`, `npm`, and `options`. Use `/api/models` to check
+availability and replace this example when your model differs:
 
 ```json
 {
@@ -107,13 +115,16 @@ Use this configuration instead. Version 1 uses `provider`, `npm`, and `options`:
 }
 ```
 
+Then connect the provider:
+
 1. Start OpenCode.
 2. Run `/connect` and select **Other**.
 3. Enter `kanto` as the provider ID.
 4. Paste your WebUI API key.
 5. Run `/models` and select **Qwen Strata**.
 
-The example sets a client output limit of 16,384 tokens. See the [v1 custom-provider guide](https://opencode.ai/docs/providers/#custom-provider).
+The example sets a client output limit of 16,384 tokens. See the
+[v1 custom-provider guide](https://opencode.ai/docs/providers/#custom-provider).
 
 For either version, keep the key in OpenCode's credential store rather than
 adding it to a project file. To select Strata as your default, add
@@ -121,14 +132,18 @@ adding it to a project file. To select Strata as your default, add
 
 ### Configure Hermes
 
+Use the setup wizard:
+
 1. Run `hermes model` in your terminal, outside a chat session.
 2. Select the custom endpoint option.
 3. Enter `https://openwebui.narwhal-snapper.ts.net/api` as the base URL.
 4. Enter your personal WebUI API key.
 5. Select **Chat Completions** when prompted for the API mode.
-6. Enter `Qwen3.8-Flash-Next-Strata` or another model ID available to your account.
+6. Enter `Qwen3.8-Flash-Next-Strata` or another model ID available to your
+   account.
 
-Alternatively, add a named provider to `~/.hermes/config.yaml`:
+Alternatively, add a named provider to `~/.hermes/config.yaml`. Use `/api/models`
+to check availability and replace these examples when your models differ:
 
 ```yaml
 providers:
@@ -144,9 +159,9 @@ providers:
         context_length: 65536
 ```
 
-Replace the placeholder locally and keep this file private. On Linux or macOS,
-run `chmod 600 ~/.hermes/config.yaml`. Merge the `kanto` entry into an existing
-`providers` mapping rather than creating a duplicate mapping.
+Replace the API key placeholder locally and keep this file private. On Linux or
+macOS, run `chmod 600 ~/.hermes/config.yaml`. Merge the `kanto` entry into an
+existing `providers` mapping rather than creating a duplicate mapping.
 
 Start Hermes and select the named provider:
 
@@ -156,28 +171,33 @@ Start Hermes and select the named provider:
 
 Use `/model` to switch between configured models. Use `hermes model` to add or
 change endpoints. If the setup wizard saved a different provider name, use that
-name in place of `kanto`. See the [Hermes provider guide](https://hermes-agent.nousresearch.com/docs/integrations/providers/).
+name in place of `kanto`. See the
+[Hermes provider guide](https://hermes-agent.nousresearch.com/docs/integrations/providers/).
 
 ### Verify the connection
 
 Start a new chat and ask for a short reply. Then ask the agent to list the files
 in a test directory to verify a complete tool call.
 
-- If the service is unreachable, check Tailscale and the `openwebui` node share.
-- For authentication errors, check your WebUI API key and API-key permission.
-- For missing models, check the exact ID and your account's model access grants.
-- For endpoint errors, check the `/api` base URL and Chat Completions transport.
+| Problem               | Check                                                     |
+| --------------------- | --------------------------------------------------------- |
+| Service unreachable   | Tailscale and the `openwebui` node share                  |
+| Authentication errors | Your WebUI API key and API-key permission                 |
+| Missing models        | The exact model ID and your account's model access grants |
+| Endpoint errors       | The `/api` base URL and Chat Completions transport        |
 
 For reasoning settings and their precedence, see
-[Set reasoning effort](#set-reasoning-effort). A setting in a WebUI
-browser chat does not configure these clients. Hermes auxiliary tasks and
-client tools can have separate providers. Selecting Kanto for chat does not
-automatically move those services to Kanto.
+[Set reasoning effort](#set-reasoning-effort). A setting in a WebUI browser chat
+does not configure these clients. Hermes auxiliary tasks and client tools can
+have separate providers. Selecting Kanto for chat does not automatically move
+those services to Kanto.
 
 ## Discover and manage models
 
 The WebUI model picker combines Ollama and Lemonade models. API clients can
 list the models available to their account through `/api/models`.
+
+### Manage Ollama models
 
 Ollama runs with Vulkan. Download or inspect its models on Vermilion:
 
@@ -190,10 +210,14 @@ ollama ps
 Ollama stores downloads in `/var/lib/ollama/models`. The repository does not
 manage the downloaded model list.
 
+### Manage Lemonade models
+
 Lemonade manages Strata through the `nix-amd-ai` module. Its preparation service
 prepares the configured model files. Set the model, quantization, and cache
 options in `nix/hosts/nixos/vermilion/lemonade.nix`. Lemonade stores models under
 `/var/lib/lemonade/models`.
+
+### Coordinate resource use
 
 Ollama, Lemonade, and ComfyUI share the host's memory and GPU. Their independent
 model limits do not coordinate memory use across services. Unload an idle
@@ -201,8 +225,8 @@ Ollama model with `ollama stop <model>` when another workload needs room.
 
 When comparing configurations, keep the model, prompt, context, and competing
 workloads consistent. Compare cold and warm time to first token as well as
-generation speed and memory use. Set runtime and hardware options in the
-host configuration.
+generation speed and memory use. Set runtime and hardware options in the host
+configuration.
 
 ## Set reasoning effort
 
@@ -212,30 +236,22 @@ for the selected backend:
 - For Ollama, set **Think (Ollama)** to **On**, **Off**, or **Custom**. For
   **Custom**, enter a level supported by that model.
 - For Strata through Lemonade, set **Reasoning Effort** to **Custom** and enter
-  `none`, `low`, `medium`, or `high`.
+  a level supported by that model.
 
 The generic **Reasoning Effort** field does not control native Ollama
 connections. **Reasoning Tags** controls display, not the amount of thinking.
-See [Open WebUI's reasoning controls](https://docs.openwebui.com/features/chat-conversations/chat-features/reasoning-models/).
+See
+[Open WebUI's reasoning controls](https://docs.openwebui.com/features/chat-conversations/chat-features/reasoning-models/).
 
-The installed models reported these settings on October 25, 2026:
+### Check model support
 
-| Model                        | Supported settings                  | Backend default |
-| ---------------------------- | ----------------------------------- | --------------- |
-| `qwen3.6:35b-a3b-mtp-q4_K_M` | On, Off                             | On              |
-| `muse-glimmer:latest`        | Off, `low`, `medium`, `high`, `max` | `high`          |
-| `qwen3.8:latest`             | Off, `low`, `medium`, `xhigh`       | `medium`        |
-| `gemma4:latest`              | On, Off                             | On              |
-| `Qwen3.8-Flash-Next-Strata`  | `none`, `low`, `medium`, `high`     | `high`          |
+Supported values and defaults vary by model and backend. Check them whenever
+you add or replace a model, and use the exact reported level names.
 
-Use the exact level names. In particular, Ollama's Qwen3.8 uses `xhigh`, while
-Strata's Qwen model uses `high`. Ollama exposes supported values and defaults
-through [`/api/show`](https://docs.ollama.com/capabilities/thinking), so check
-again after replacing a model.
-
-Strata's levels guide the model rather than impose a fixed token count.
-`none` disables thinking. A separate `reasoning_budget_tokens` parameter sets
-a hard thinking cap. See the [Strata documentation](https://github.com/Niko1221/Strata/blob/v0.1.44.1/docs/DETAILS.md).
+Ollama exposes supported values and defaults through
+[`/api/show`](https://docs.ollama.com/capabilities/thinking). For Strata, see the
+[Strata documentation](https://github.com/Niko1221/Strata/blob/master/docs/DETAILS.md)
+for reasoning levels and the separate `reasoning_budget_tokens` parameter.
 
 ### Share defaults with API clients
 
@@ -248,15 +264,13 @@ For Strata requests through WebUI, the precedence is:
 2. The saved WebUI model's **Reasoning Effort**, when the request omits it.
 3. Strata's backend default, when neither supplies a value.
 
-For example, a client request with `"reasoning_effort": "low"` uses low
-effort even if the saved model default is high. Client menus can expose levels
-that Strata does not support. Choose `none`, `low`, `medium`, or `high`, and
-check that the client sends the selected value in its Chat Completions request.
+A request-level setting overrides the saved model default. Client menus can
+expose levels that Strata does not support. Choose a level reported for the
+selected model, and check that the client sends it in the Chat Completions
+request.
 
-As checked on October 25, 2026, Kanto has no Strata reasoning override in the
-backend configuration or saved WebUI model parameters. Requests without an
-explicit setting therefore use `high`. This precedence describes Strata's
-OpenAI-compatible connection, not native Ollama's `think` parameter.
+This precedence describes Strata's OpenAI-compatible connection, not native
+Ollama's `think` parameter.
 
 ## Run code with Open Terminal
 
@@ -281,5 +295,5 @@ uploads, outputs, and job queue. ComfyUI has no separate application login.
 
 State lives in `/var/lib/comfyui`. Add model files and custom nodes there as
 needed. The Nix configuration does not install them. Backups exclude downloaded
-models and temporary files. Coordinate memory-heavy image
-jobs with Ollama and Lemonade workloads.
+models and temporary files. Coordinate memory-heavy image jobs with Ollama and
+Lemonade workloads.

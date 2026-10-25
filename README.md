@@ -1,11 +1,11 @@
 # kanto
 
-Kanto runs shared inference and applications on NixOS and k3s. Flux deploys
-applications, Comin deploys host configurations, and SOPS encrypts secrets.
+NixOS and k3s configuration for shared inference and applications. Kanto runs
+Ollama, Lemonade, ComfyUI, Open WebUI, and Open Terminal on Vermilion.
 
-For the homelab, see [johto](https://github.com/devon-systems/johto).
-For personal machines and household services, see
-[hoenn](https://github.com/devon-systems/hoenn).
+See also [Hoenn](https://github.com/devon-systems/hoenn) for personal machines,
+[Johto](https://github.com/devon-systems/johto) for the homelab, and
+[Sinnoh](https://github.com/devon-systems/sinnoh) for production services.
 
 ## Architecture
 
@@ -13,19 +13,17 @@ For personal machines and household services, see
 | -------------------------------------------------- | -------------------------------------------------------------- |
 | [`vermilion`](nix/hosts/nixos/vermilion/README.md) | k3s server, Ollama, Lemonade with Strata, ComfyUI, and backups |
 
-Open WebUI runs in Kubernetes and provides shared browser chat, individual
-accounts, and an authenticated Chat Completions API. It connects to Ollama and
-Lemonade on Vermilion. Open Terminal provides persistent workspaces for code
-execution through WebUI. ComfyUI runs on the host with a shared workspace and
-job queue.
+Open WebUI provides browser chat and an authenticated Chat Completions API.
+It connects to Ollama and Lemonade on Vermilion. Open Terminal provides
+persistent workspaces for code execution through WebUI. ComfyUI runs on the
+host with a shared workspace and job queue.
 
-Tailscale provides private HTTPS access through separate `openwebui` and
-`comfyui` ingress nodes. Morgan can access these nodes from her own
-tailnet through Tailscale sharing. Vermilion uses local k3s networking.
-The WebUI and ComfyUI proxy pods run on the same host as their backends.
+Separate Tailscale ingress nodes provide private HTTPS access to Open WebUI and
+ComfyUI. Tailscale sharing gives Morgan access from her own tailnet. Vermilion
+uses local k3s networking.
 
-Comin reconciles host configuration from `master`. Flux reconciles Kubernetes
-applications and secrets from `k8s/flux-system/`.
+Comin reconciles host configuration from `master`. Flux reconciles the
+Kubernetes resources in `k8s/flux-system/` from the same branch.
 
 See [Use Kanto models](docs/inference.md) for service access and client setup.
 
@@ -33,68 +31,54 @@ See [Use Kanto models](docs/inference.md) for service access and client setup.
 
 ```text
 nix/
-├── hosts/nixos/       Per-host configuration and hardware state
-├── modules/           Host defaults and feature modules
+├── hosts/nixos/       Host configuration and hardware state
+├── modules/           Host defaults and shared features
 ├── devShells.nix      Development tools
-└── treefmt.nix        Formatting configuration
-k8s/                  Flux, Kustomize, Helm, and application manifests
+└── treefmt.nix        Formatting
+k8s/                  Flux and application manifests
 secrets/              SOPS-encrypted host secrets
-keys/                 Public SSH keys and Flux age recipient
-scripts/              Repository maintenance utilities
-docs/                 Cluster operations and inference client setup
-.github/workflows/    Flake checks and configuration builds
+keys/                 Public SOPS recipients
+docs/                 Cluster operations and inference setup
+scripts/              Maintenance tools
 ```
 
-`flake.nix` recursively imports the modules under `nix/` and exposes
-`nixosConfigurations.vermilion`. Each Kubernetes application has a directory under
-`k8s/`. The resources in `k8s/flux-system/` define their reconciliation order.
-Kubernetes secrets live in `k8s/secrets/`.
+`flake.nix` recursively imports the Nix files under `nix/` and exposes
+`nixosConfigurations.vermilion`. Kubernetes secrets live in `k8s/secrets/`.
 
-## Work locally
+## Development
 
-Enter the pinned development shell with `nix develop`, or use `direnv allow`
-to load it automatically. From the repository root:
+Enter the pinned development shell with `nix develop`, or run `direnv allow` to
+load it automatically. Then run:
 
 ```sh
 nix fmt
 nix flake check
+nix build .#nixosConfigurations.vermilion.config.system.build.toplevel
 ```
 
-Run `just` to list maintenance commands. Use `just check-k8s` to validate
-manifests and `just flux-status` to inspect deployments. The Flux recipes
-target the `kanto` context, as the equivalent recipes do in Hoenn and Johto.
+After Kubernetes changes, run `just check-k8s`. Run `just` to list the other
+maintenance commands.
 
-## Deploy changes
+## Deployment
 
-`blzrd` deploys the registered NixOS hosts. For example:
+Commit and push validated changes, then let Comin and Flux reconcile `master`.
+Run `just flux-status` to inspect the cluster through the `kanto` context.
+Renovate merges routine dependency updates after the required checks pass.
 
-```sh
-blzrd switch vermilion
-```
+See [cluster operations](docs/kubernetes.md) for bootstrap, service sharing,
+backups, recovery, and updates. For a new NixOS installation, follow the
+[bootstrap guide](https://github.com/devon-systems/infra/blob/master/docs/nixos-bootstrap.md).
 
-`switch` activates the configuration and sets the boot default. `boot` sets
-the boot default without activating it. Without a host name, `blzrd switch`
-deploys every registered node.
+## Secrets
 
-Comin deploys host changes from `master`. Flux deploys Kubernetes workloads
-from the same branch. Renovate follows the other clusters' update policy and
-automatically merges routine updates after required checks pass.
-
-See [Kanto cluster operations](docs/kubernetes.md) for bootstrap, service
-sharing, backups, recovery, and automatic updates. First installations follow
-the shared [NixOS bootstrap guide](https://github.com/devon-systems/infra/blob/master/docs/nixos-bootstrap.md).
-
-## Edit secrets
-
-SOPS encrypts secrets for the recipients in `.sops.yaml`. Public keys live in
-`keys/`. To edit a host secret from the development shell:
+Run `just sops-bootstrap` once per machine to derive your local age key from
+your SSH key. Then edit secrets with SOPS:
 
 ```sh
 just sops-edit tailscale.yaml
+just sops-edit k8s/secrets/tailscale-operator-values.sops.yaml
 ```
 
-For Kubernetes secrets, pass the full path, such as
-`just sops-edit k8s/secrets/tailscale-operator-values.sops.yaml`.
-Use `just sops-bootstrap` once to derive your local age identity from your SSH
-key. After changing recipients, run `just sops-rekey` and commit `.sops.yaml`
-with the re-encrypted secrets.
+After changing `keys/`, run `just sops-rekey`. Commit `.sops.yaml` and all
+re-encrypted files together. Never commit decrypted secrets or private keys.
+Do not copy encrypted credentials or Flux identities from another cluster.
