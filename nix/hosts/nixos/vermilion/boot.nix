@@ -13,7 +13,5 @@ _: {
     ];
 
     boot.kernelPackages = pkgs.linuxPackages_latest;
-    hardware.cpu.amd.updateMicrocode = true;
-    hardware.graphics.enable = true;
   };
 }
