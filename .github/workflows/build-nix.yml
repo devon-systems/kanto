@@ -1,0 +1,31 @@
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+env:
+  NIX_CONFIG: "access-tokens = github.com=${{ github.token }}"
+jobs:
+  build-devShell-default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: alyraffauf
+      - name: Build devShell default
+        run: nix build --accept-flake-config --print-out-paths .#devShells.x86_64-linux.default
+name: build-nix
+"on":
+  pull_request:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/**
+      - flake.lock
+      - flake.nix
+      - nix/devShells.nix
+  workflow_dispatch: {}
