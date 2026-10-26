@@ -88,6 +88,10 @@ spec:
               value: "true"
             - name: ENABLE_IMAGE_GENERATION
               value: "true"
+            - name: DEFAULT_MODEL_METADATA
+              value: >-
+                {"capabilities":{"web_search":true,"image_generation":true},
+                "defaultFeatureIds":["web_search","image_generation"]}
             - name: USER_PERMISSIONS_FEATURES_IMAGE_GENERATION
               value: "true"
             - name: IMAGE_GENERATION_ENGINE
