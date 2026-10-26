@@ -86,6 +86,33 @@ spec:
               value: "false"
             - name: ENABLE_WEB_SEARCH
               value: "true"
+            - name: ENABLE_IMAGE_GENERATION
+              value: "true"
+            - name: USER_PERMISSIONS_FEATURES_IMAGE_GENERATION
+              value: "true"
+            - name: IMAGE_GENERATION_ENGINE
+              value: comfyui
+            - name: IMAGE_GENERATION_MODEL
+              value: z_image_turbo_bf16.safetensors
+            - name: IMAGE_SIZE
+              value: 1024x1024
+            - name: IMAGE_STEPS
+              value: "8"
+            - name: COMFYUI_BASE_URL
+              value: http://$(VERMILION_IP):8188
+            - name: COMFYUI_WORKFLOW
+              valueFrom:
+                configMapKeyRef:
+                  name: open-webui-images
+                  key: COMFYUI_WORKFLOW
+            - name: COMFYUI_WORKFLOW_NODES
+              value: >-
+                [{"type":"prompt","key":"text","node_ids":["27"]},
+                {"type":"width","key":"width","node_ids":["13"]},
+                {"type":"height","key":"height","node_ids":["13"]},
+                {"type":"n","key":"batch_size","node_ids":["13"]},
+                {"type":"steps","key":"steps","node_ids":["3"]},
+                {"type":"seed","key":"seed","node_ids":["3"]}]
             - name: WEB_SEARCH_ENGINE
               value: duckduckgo
             - name: ENABLE_OPENAI_API

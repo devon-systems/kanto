@@ -4,3 +4,8 @@ resources:
   - workload.yaml
   - ingress.yaml
   - network-policy.yaml
+configMapGenerator:
+  - name: open-webui-images
+    namespace: open-webui
+    files:
+      - COMFYUI_WORKFLOW=workflows/z-image-turbo.json
