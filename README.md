@@ -14,8 +14,8 @@ See also [Hoenn](https://github.com/devon-systems/hoenn) for personal machines,
 | [`vermilion`](nix/hosts/nixos/vermilion/README.md) | k3s server, Ollama, Lemonade with Strata, ComfyUI, and backups |
 
 Open WebUI provides browser chat and an authenticated Chat Completions API.
-It connects to Ollama and Lemonade on Vermilion. Open Terminal provides
-persistent workspaces for code execution through WebUI. ComfyUI runs on the
+It connects to Ollama and Lemonade on Vermilion. Open Terminal runs code for
+WebUI in persistent workspaces. ComfyUI runs on the
 host with a shared workspace and job queue.
 
 Separate Tailscale ingress nodes provide private HTTPS access to Open WebUI and

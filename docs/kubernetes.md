@@ -42,7 +42,7 @@ also permit your device to reach port `6443`.
 
 ### Install Flux
 
-Use a repository-scoped SSH deploy key registered as read-only on
+Use a read-only SSH deploy key registered on
 `devon-systems/kanto`. If the private key is stored at `~/.ssh/kanto-flux`, run:
 
 ```sh
@@ -72,7 +72,7 @@ Linux and Open WebUI accounts are separate. WebUI signup is disabled. Its
 bootstrap administrator credentials come from
 `k8s/secrets/open-webui.sops.yaml` and apply when the database is empty.
 
-For each new WebUI user, complete these steps in the administration interface:
+For each new WebUI user, use the administration interface:
 
 1. Set the account role to **User**.
 2. Add the account to the **API access** group if the user needs an API key.
@@ -82,13 +82,11 @@ For each new WebUI user, complete these steps in the administration interface:
 4. Have the user refresh WebUI and confirm that the models and API-key option
    appear.
 
-When you add a model, grant access to its intended users. Existing model grants
-do not apply to new models.
+Grant users access to each new model.
 
-WebUI stores groups, memberships, and model grants in its database. These
-settings survive restarts but need restoration or recreation after a database
-loss. For a fresh database, create **API access** with the **API Keys** feature
-permission before adding members.
+WebUI stores groups, memberships, and model grants in its database. Restore or
+recreate them after a database loss. For a fresh database, create **API access**
+with the **API Keys** feature permission before adding members.
 
 ### Edit SOPS secrets
 
@@ -152,9 +150,8 @@ host keys, rekey secrets, and register the host with `blzrd`.
 
 WebUI and the ComfyUI proxy select Vermilion and reach their host
 backends through `status.hostIP`. Local-path volumes also remain on their node.
-Adding another inference host requires explicit backend routing and storage
-decisions. Adding a NixOS configuration alone does not distribute these
-services.
+For another inference host, configure its backend routing and storage.
+Adding a NixOS configuration alone does not distribute these services.
 
 ## Restore backups
 
@@ -171,9 +168,9 @@ Vermilion's Restic jobs back up the following data under
 The jobs exclude downloaded ComfyUI models, temporary files, and the Ollama and
 Lemonade model stores.
 
-The local-path backup is a file backup, not an application-consistent database
-snapshot. Stop WebUI or capture a consistent SQLite backup before relying on a
-particular database recovery point. Open Terminal stores home directories in
+The local-path backup copies files without coordinating database writes. Stop
+WebUI or capture a consistent SQLite backup before relying on a database
+recovery point. Open Terminal stores home directories in
 the `open-terminal-home` local-path volume.
 
 Preserve the cluster token, Flux age identity, WebUI signing key, application

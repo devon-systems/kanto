@@ -1,6 +1,6 @@
 # Work in Kanto
 
-Kanto runs shared inference and infrastructure on Vermilion. Follow Hoenn's flake-parts/import-tree layout and the Comin, Flux, SOPS, and Renovate workflows shared with Hoenn and Johto.
+Kanto runs shared inference and infrastructure on Vermilion. Its Nix configuration uses `flake-parts` and `import-tree`.
 
 - Hosts: `nix/hosts/nixos/<host>/`; features: `nix/modules/<feature>/`; NixOS defaults: `nix/modules/default/`
 - Applications: `k8s/<app>/`; Flux Kustomizations: `k8s/flux-system/`
@@ -8,13 +8,15 @@ Kanto runs shared inference and infrastructure on Vermilion. Follow Hoenn's flak
 
 ## Validate changes
 
-Use the pinned development shell. Before committing, run `nix fmt` and `nix flake check`, then build every affected host:
+Use the pinned development shell. Before committing, run `nix fmt` and `nix flake check`. Build every affected host:
 
 ```sh
 nix build .#nixosConfigurations.<host>.config.system.build.toplevel
 ```
 
-For Kubernetes changes, update Kustomize resource lists and Flux dependencies together. Never reformat `k8s/flux-system/gotk-components.yaml`. Run `just check-k8s`; it renders the Flux graph and local Helm releases and validates remote Helm declarations. It also renders the pinned Tailscale operator Deployment with public values to verify resource settings; other remote charts remain unrendered.
+For Kubernetes changes, update Kustomize resource lists and Flux dependencies together. Never reformat `k8s/flux-system/gotk-components.yaml`.
+
+Run `just check-k8s` to validate the Flux graph and Helm declarations. It renders local charts and the pinned Tailscale operator Deployment. Other remote charts remain unrendered.
 
 After `facter.json` changes, run:
 
@@ -38,7 +40,7 @@ Manual deployment, forced reconciliation, and deployment-service restarts requir
 
 Edit encrypted files with `just sops-edit`. Never print private keys or decrypted credentials, and never copy another cluster's encrypted credentials or Flux identity.
 
-After recipient changes, run `just sops-rekey`; commit `.sops.yaml` with every re-encrypted file.
+After recipient changes, run `just sops-rekey`. Commit `.sops.yaml` with every re-encrypted file.
 
 ## Preserve shared access
 

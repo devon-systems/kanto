@@ -46,8 +46,8 @@ project repository.
 ### Configure OpenCode
 
 Run `opencode --version` to choose the matching example. Merge the settings
-into `~/.config/opencode/opencode.json` and keep your existing settings. A
-project-level `opencode.json` also works if you want Kanto only in that project.
+into `~/.config/opencode/opencode.json`. For access within one project, use
+that project's `opencode.json`.
 
 #### OpenCode v2
 
@@ -126,8 +126,7 @@ Then connect the provider:
 The example sets a client output limit of 16,384 tokens. See the
 [v1 custom-provider guide](https://opencode.ai/docs/providers/#custom-provider).
 
-For either version, keep the key in OpenCode's credential store rather than
-adding it to a project file. To select Strata as your default, add
+Keep the key in OpenCode's credential store. To use Strata by default, add
 `"model": "kanto/Qwen3.8-Flash-Next-Strata"` at the top level of the config.
 
 ### Configure Hermes
@@ -159,9 +158,9 @@ providers:
         context_length: 65536
 ```
 
-Replace the API key placeholder locally and keep this file private. On Linux or
-macOS, run `chmod 600 ~/.hermes/config.yaml`. Merge the `kanto` entry into an
-existing `providers` mapping rather than creating a duplicate mapping.
+Replace the API key placeholder locally. On Linux or macOS, run
+`chmod 600 ~/.hermes/config.yaml` to keep the file private. Merge `kanto` into
+the existing `providers` mapping.
 
 Start Hermes and select the named provider:
 
@@ -194,9 +193,10 @@ those services to Kanto.
 
 ## Discover and manage models
 
-The WebUI model picker combines Ollama and Lemonade models. Current models
-are hosted by Lemonade. API clients can list the models available to their account through `/api/models`. The existing Qwen API IDs
-remain available as WebUI aliases backed by Lemonade.
+The WebUI model picker combines Ollama and Lemonade models. Lemonade hosts
+the current models. API clients can list models available to their account
+through `/api/models`. The existing Qwen API IDs remain available as WebUI
+aliases backed by Lemonade.
 
 ### Manage Ollama models
 
@@ -214,10 +214,9 @@ manage the downloaded model list.
 
 ### Manage Lemonade models
 
-Lemonade manages Strata through the `nix-amd-ai` module. Its preparation service
-prepares the configured model files. Set the model, quantization, and cache
-options in `nix/hosts/nixos/vermilion/lemonade.nix`. Lemonade stores models under
-`/var/lib/lemonade/models`.
+Lemonade manages Strata through the `nix-amd-ai` module. Set the model,
+quantization, and cache options in `nix/hosts/nixos/vermilion/lemonade.nix`.
+Lemonade stores models under `/var/lib/lemonade/models`.
 
 ### Coordinate resource use
 
@@ -225,10 +224,9 @@ Ollama, Lemonade, and ComfyUI share the host's memory and GPU. Their independent
 model limits do not coordinate memory use across services. Unload an idle
 Ollama model with `ollama stop <model>` when another workload needs room.
 
-When comparing configurations, keep the model, prompt, context, and competing
-workloads consistent. Compare cold and warm time to first token as well as
-generation speed and memory use. Set runtime and hardware options in the host
-configuration.
+To compare configurations, use the same model, prompt, context, and competing
+workloads. Measure cold and warm time to first token, generation speed, and
+memory use. Set runtime and hardware options in the host configuration.
 
 ## Set reasoning effort
 
@@ -282,7 +280,6 @@ execution. This is separate from WebUI's browser-based code interpreter.
 
 Each WebUI user gets a persistent home directory in the shared
 `open-terminal-home` volume. Users share one container and its resource limits.
-Each home directory is a workspace within that container.
 
 The terminal can reach the public IPv4 internet for downloads and package
 installation. Its network policy blocks private LAN, cluster, and tailnet
