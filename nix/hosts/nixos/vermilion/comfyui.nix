@@ -28,8 +28,9 @@ _: {
 
     systemd.services.comfyui-models = {
       description = "Download ComfyUI models";
+      wantedBy = ["multi-user.target"];
       wants = ["network-online.target"];
-      after = ["network-online.target"];
+      after = ["network-online.target" "comfyui.service"];
       path = [pkgs.coreutils pkgs.curl pkgs.jq];
       script = "${pkgs.bash}/bin/bash ${./comfyui/fetch-models.sh} ${modelManifest} ${lib.escapeShellArg "${config.services.comfyui.dataDir}/models"}";
       serviceConfig = {
@@ -44,8 +45,6 @@ _: {
     };
 
     systemd.services.comfyui = {
-      requires = ["comfyui-models.service"];
-      after = ["comfyui-models.service"];
       preStart = lib.mkAfter ''
         install -Dm644 ${./comfyui/workflows/z-image-turbo.json} ${config.services.comfyui.dataDir}/user/default/workflows/z-image-turbo.json
         install -Dm644 ${./comfyui/workflows/krea2-turbo.json} ${config.services.comfyui.dataDir}/user/default/workflows/krea2-turbo.json

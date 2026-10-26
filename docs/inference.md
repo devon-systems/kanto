@@ -301,7 +301,8 @@ To use Krea 2 Turbo, open the saved `krea2-turbo` workflow in ComfyUI. The
 `comfyui-models` service downloads both models, their text encoders, and VAEs
 into `/var/lib/comfyui/models`. Change the model list in
 `nix/hosts/nixos/vermilion/comfyui/_models.nix`. Nix installs the two saved
-workflows. Open WebUI uses one generation workflow at a time.
+workflows. Model downloads run after ComfyUI starts and skip existing files.
+Open WebUI uses one generation workflow at a time.
 
 State lives in `/var/lib/comfyui`. Backups exclude downloaded models and temporary
 files. Coordinate memory-heavy image jobs with Ollama and Lemonade workloads.
