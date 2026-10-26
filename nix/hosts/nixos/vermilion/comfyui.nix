@@ -5,9 +5,6 @@ _: {
     pkgs,
     ...
   }: let
-    rocmRuntime = pkgs.rocmPackages.rocm-runtime.overrideAttrs (old: {
-      patches = old.patches ++ [./comfyui/rocr-polling-backoff.patch];
-    });
     python = pkgs.python3.override {
       packageOverrides = final: prev: {
         torch = prev.torch.override {
@@ -63,9 +60,6 @@ _: {
     };
 
     users.users.comfyui.extraGroups = ["render" "video"];
-
-    # Load Torch's OpenMP runtime first to avoid an initialization deadlock.
-    systemd.services.comfyui.environment.LD_PRELOAD = "${pkgs.stdenv.cc.cc.lib}/lib/libgomp.so.1 ${rocmRuntime}/lib/libhsa-runtime64.so.1";
 
     systemd.services.comfyui.preStart = lib.mkAfter ''
       install -Dm644 ${./comfyui/workflows/z-image-turbo.json} ${config.services.comfyui.dataDir}/user/default/workflows/z-image-turbo.json
