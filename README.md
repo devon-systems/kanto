@@ -24,6 +24,10 @@ ComfyUI. Vermilion uses local k3s networking.
 Comin reconciles host configuration from `master`. Flux reconciles the
 Kubernetes resources in `k8s/flux-system/` from the same branch.
 
+Prometheus and Loki store metrics and logs on Vermilion for 30 days. Alloy
+collects host and Kubernetes telemetry. Use the Kanto data sources in the
+shared Grafana on Canalave.
+
 See [Use Kanto models](docs/inference.md) for service access and client setup.
 
 ## Repository layout

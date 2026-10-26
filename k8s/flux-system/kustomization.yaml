@@ -4,6 +4,7 @@ resources:
   - gotk-components.yaml
   - gotk-sync.yaml
   - namespaces.yaml
+  - alloy.yaml
   - secrets.yaml
   - tailscale.yaml
   - open-webui.yaml

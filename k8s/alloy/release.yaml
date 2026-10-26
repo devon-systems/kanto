@@ -1,0 +1,92 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      version: 1.14.3
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  interval: 30m
+  releaseName: alloy
+  targetNamespace: alloy-system
+  upgrade:
+    remediation:
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: alloy-config-values
+      valuesKey: config.alloy
+      targetPath: alloy.configMap.content
+      literal: true
+  values:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+          appProtocol: h2c
+      extraEnv:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: data
+            mountPath: /var/lib/alloy
+      enableReporting: false
+      resources:
+        limits:
+          cpu: 500m
+          memory: 768Mi
+        requests:
+          cpu: 25m
+          memory: 128Mi
+    controller:
+      nodeSelector:
+        kubernetes.io/hostname: vermilion
+      type: deployment
+      replicas: 1
+      updateStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 0
+          maxUnavailable: 1
+      volumes:
+        extra:
+          - name: data
+            persistentVolumeClaim:
+              claimName: alloy-data
+    rbac:
+      rules:
+        - apiGroups: [""]
+          resources: [pods, namespaces, events]
+          verbs: [get, list, watch]
+        - apiGroups: [""]
+          resources: [pods/log]
+          verbs: [get]
+      clusterRules:
+        - apiGroups: [""]
+          resources: [nodes]
+          verbs: [get, list, watch]
+        - apiGroups: [""]
+          resources: [nodes/metrics]
+          verbs: [get]
+    crds:
+      create: false
+    image:
+      # renovate: image=docker.io/grafana/alloy
+      tag: v1.21.2
+      digest: sha256:89a5a320168387336b9ac3c850609c3ba7757eadd4ae5f1d819deb35e9854b18

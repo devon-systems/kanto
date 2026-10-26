@@ -62,6 +62,26 @@ spec:
               value: /api/models,/api/chat/completions
             - name: CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
               value: "1"
+            - name: ENABLE_OTEL
+              value: "true"
+            - name: ENABLE_OTEL_METRICS
+              value: "true"
+            - name: ENABLE_OTEL_TRACES
+              value: "false"
+            - name: ENABLE_OTEL_LOGS
+              value: "false"
+            - name: OTEL_SERVICE_NAME
+              value: open-webui
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: cluster=kanto
+            - name: OTEL_METRICS_EXPORTER_OTLP_ENDPOINT
+              value: http://alloy.alloy-system.svc.cluster.local:4317
+            - name: OTEL_METRICS_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: OTEL_METRICS_OTLP_SPAN_EXPORTER
+              value: grpc
+            - name: OTEL_METRICS_EXPORT_INTERVAL_MILLIS
+              value: "30000"
             - name: ENABLE_PERSISTENT_CONFIG
               value: "false"
             - name: ENABLE_WEB_SEARCH

@@ -20,6 +20,7 @@
         self.nixosModules.lanzaboote
         self.nixosModules.lemonade
         self.nixosModules.morgan
+        self.nixosModules.observability
         self.nixosModules.tailscale
         self.nixosModules.vermilion
         self.nixosModules.wifi

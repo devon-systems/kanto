@@ -164,9 +164,12 @@ Vermilion's Restic jobs back up the following data under
 - Lemonade configuration, including user-added model registrations and
   per-model settings
 - ComfyUI state
+- Prometheus and Loki data
 
 The jobs exclude downloaded ComfyUI models, temporary files, and the Ollama and
 Lemonade model stores.
+
+Prometheus and Loki backups retain 7 daily, 4 weekly, and 12 monthly snapshots.
 
 The local-path backup copies files without coordinating database writes. Stop
 WebUI or capture a consistent SQLite backup before relying on a database
@@ -180,6 +183,21 @@ share the replacement node again.
 
 Follow the shared
 [k3s recovery guide](https://github.com/devon-systems/infra/blob/master/docs/k3s-control-plane-recovery.md).
+
+## Check metrics and logs
+
+Prometheus and Loki retain 30 days of data on Vermilion. Host Alloy collects
+system metrics, journals, and Comin metrics. Kubernetes Alloy collects pod
+logs, events, container metrics, workload state, and Flux metrics.
+
+Prometheus scrapes Lemonade's native metrics for token usage, generation speed,
+time to first token, prompt caching, and model residency. Host metrics include
+AMD DRM GPU counters. Open WebUI sends HTTP and user-count metrics to Alloy
+over OTLP. Ollama and ComfyUI currently have journal and host-resource coverage.
+
+Use **Kanto Prometheus** and **Kanto Loki** in the shared Grafana on Canalave.
+Follow the [observability guide](https://github.com/devon-systems/infra/blob/master/docs/observability.md)
+to check collection and query the data.
 
 ## Manage automatic updates
 
