@@ -1,0 +1,25 @@
+Backport the polling fallback from ROCm/rocm-systems commit
+46558b7af4dc79b8b8014619c1afdb82db079a9f to ROCr 7.2.4.
+https://github.com/ROCm/rocm-systems/commit/46558b7af4dc79b8b8014619c1afdb82db079a9f
+
+--- a/runtime/hsa-runtime/core/runtime/runtime.cpp
++++ b/runtime/hsa-runtime/core/runtime/runtime.cpp
+@@ -1840,6 +1840,8 @@
+       // Process all signals on the CPU first
+       bool finish = false;
+       bool polling = false;
++      const int poll_nap_ceiling_us = g_use_interrupt_wait ? 200 : 2000;
++      int poll_nap_us = 20;
+       bool init_age = true;
+ 
+         for (size_t e = 0; e < async_events_.Size(); e++) {
+@@ -1894,6 +1896,9 @@
+         if (interrupt_wait) {
+           WaitForInterrupt();
+           init_age = false;
++        } else if (polling && !finish) {
++          os::uSleep(poll_nap_us);
++          poll_nap_us = std::min(2 * poll_nap_us, poll_nap_ceiling_us);
+         }
+       }
+     }
