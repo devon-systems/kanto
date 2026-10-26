@@ -19,6 +19,8 @@ _: {
       enable = true;
       listen = ["0.0.0.0"];
       package = pkgs.comfyui.override {python3 = python;};
+      # Fused attention corrupts longer Qwen text encodings on gfx1151.
+      extraArgs = ["--use-split-cross-attention"];
       models = [
         {
           name = "z_image_turbo_bf16.safetensors";
