@@ -56,6 +56,11 @@ _: {
           top_k = 20;
         };
         extraArgs = [
+          "--batch"
+          "3"
+          "--batch-mtp"
+          "--prefill"
+          "4096"
           "--prompt-cache"
           "6"
           "--conversation-cache-mib"
