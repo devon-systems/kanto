@@ -104,7 +104,10 @@ _: {
         }
 
         prometheus.exporter.unix "host" {
-          enable_collectors = ["systemd", "drm"]
+          enable_collectors = ["systemd", "drm", "textfile"]
+          textfile {
+            directory = "/var/lib/kanto-metrics"
+          }
         }
 
         discovery.relabel "node" {
