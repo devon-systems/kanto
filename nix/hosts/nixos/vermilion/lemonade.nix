@@ -60,7 +60,7 @@ _: {
           "3"
           "--batch-mtp"
           "--prefill"
-          "4096"
+          "16384"
           "--prompt-cache"
           "6"
           "--conversation-cache-mib"
