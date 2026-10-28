@@ -5,7 +5,10 @@ _: {
       clusterInit = true;
       nodeLabel = ["kanto.narwhal-snapper-ts.net/workload=inference"];
       disable = ["traefik" "servicelb"];
-      extraFlags = ["--tls-san=vermilion.narwhal-snapper.ts.net"];
+      extraFlags = [
+        "--tls-san=vermilion.narwhal-snapper.ts.net"
+        "--kube-controller-manager-arg=terminated-pod-gc-threshold=10"
+      ];
       extraKubeletConfig = {
         systemReserved = {
           cpu = "4";
