@@ -74,7 +74,6 @@ _: {
           "--kv-resident"
           "32768"
         ];
-        # Leave room for the other buffers within the default GTT limit.
         expertCache = 14000;
       };
     };
