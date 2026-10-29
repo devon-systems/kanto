@@ -1,4 +1,4 @@
-_: {
+{inputs, ...}: {
   flake.nixosModules.backups = {
     config,
     lib,
@@ -7,11 +7,7 @@ _: {
   }: let
     directory = "/var/lib/kanto-metrics";
     jobs = builtins.attrNames config.services.restic.backups;
-    reporter = pkgs.writeShellApplication {
-      name = "kanto-backup-metrics";
-      runtimeInputs = [pkgs.python3 pkgs.systemd pkgs.coreutils];
-      text = ''exec python3 ${../../../scripts/backup-metrics.py} "$@"'';
-    };
+    reporter = inputs.dvnpkgs.packages.${pkgs.stdenv.hostPlatform.system}.backup-metrics;
     command = "${lib.getExe reporter} --directory ${directory}";
   in {
     systemd.tmpfiles.rules = ["d ${directory} 0755 root root -"];

@@ -1,5 +1,5 @@
 _: {
-  perSystem = {pkgs, ...}: {
+  perSystem = {
     treefmt.config = {
       programs = {
         alejandra.enable = true;
@@ -8,12 +8,6 @@ _: {
         shellcheck.enable = true;
         shfmt.enable = true;
         statix.enable = true;
-      };
-
-      settings.formatter.python-reporters = {
-        command = "${pkgs.ruff}/bin/ruff";
-        options = ["format" "--isolated" "--target-version" "py313"];
-        includes = ["scripts/backup-metrics.py"];
       };
 
       settings.excludes = [

@@ -42,7 +42,6 @@ k8s/                  Flux and application manifests
 secrets/              SOPS-encrypted host secrets
 keys/                 Public SOPS recipients
 docs/                 Cluster operations and inference setup
-scripts/              Maintenance tools
 ```
 
 `flake.nix` recursively imports the Nix files under `nix/` and exposes
@@ -58,6 +57,8 @@ nix fmt
 nix flake check
 nix build .#nixosConfigurations.vermilion.config.system.build.toplevel
 ```
+
+Shared validation and metrics helpers come from the pinned dvnpkgs input.
 
 After Kubernetes changes, run `just check-k8s`. Run `just` to list the other
 maintenance commands.
