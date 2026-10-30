@@ -41,7 +41,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: open-terminal
-          image: ghcr.io/open-webui/open-terminal:0.14.6@sha256:785d7f2b845f2bf15a1d5e3c9f1460709168551cdf004f1513ed7802426589b3
+          image: ghcr.io/open-webui/open-terminal:0.14.7@sha256:f231354ca43b5ab68e383548f1ed24fc7ce0ac5f6b542ddff0b2421e2b0154ce
           securityContext:
             allowPrivilegeEscalation: true
             capabilities:
