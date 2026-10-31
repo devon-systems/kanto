@@ -59,9 +59,6 @@ _: {
           "--batch"
           "3"
           "--batch-mtp"
-          # Bound draft attention work; the main model still verifies with full context.
-          "--mtp-window"
-          "8192"
           "--prefill"
           "16384"
           "--prompt-cache"
