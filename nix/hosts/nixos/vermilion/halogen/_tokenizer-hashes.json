@@ -1,0 +1,8 @@
+{
+  "chat_template.jinja": "sha256-w8+eNKv0+eNsLXIWWqnBMtPipyW2wlhqqjqK+deoEEE=",
+  "generation_config.json": "sha256-5wwTbBt43cH7CQW6yOczpNxEjU+FKl3XUUP//HC+VQ4=",
+  "merges.txt": "sha256-qdNW173x70lJ4+dI6VuOEK2dTi6Djt3Digp7a5TR240=",
+  "tokenizer.json": "sha256-CZf0EMV6H05TsJ5L6PShctkO3ZVkNo+whHAwk3IpufM=",
+  "tokenizer_config.json": "sha256-sRNJqvp83GoyB2fPfOsp7YL37aXWXo4IGedvDOlHvyc=",
+  "vocab.json": "sha256-zpm0yymD0RiAbOCot3ejWwk+IAClA+veJYUyhMnfoAM="
+}

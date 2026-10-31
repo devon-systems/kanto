@@ -9,9 +9,9 @@ See also [Hoenn](https://github.com/devon-systems/hoenn) for personal machines,
 
 ## Architecture
 
-| Host                                               | Role                                                           |
-| -------------------------------------------------- | -------------------------------------------------------------- |
-| [`vermilion`](nix/hosts/nixos/vermilion/README.md) | k3s server, Ollama, Lemonade with Strata, ComfyUI, and backups |
+| Host                                               | Role                                                                       |
+| -------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`vermilion`](nix/hosts/nixos/vermilion/README.md) | k3s server, Ollama, Lemonade with Halogen and Strata, ComfyUI, and backups |
 
 Open WebUI provides browser chat and an authenticated Chat Completions API.
 It connects to Ollama and Lemonade on Vermilion. Open Terminal runs code for

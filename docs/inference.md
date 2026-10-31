@@ -66,7 +66,7 @@ replace these examples when your models differ:
       },
       "models": {
         "Qwen3.8-Flash-Next-Strata": {
-          "name": "Qwen Strata",
+          "name": "Qwen Flash",
           "limit": { "context": 262144 }
         },
         "qwen3.6:35b-a3b-mtp-q4_K_M": {
@@ -106,7 +106,7 @@ availability and replace this example when your model differs:
       },
       "models": {
         "Qwen3.8-Flash-Next-Strata": {
-          "name": "Qwen Strata",
+          "name": "Qwen Flash",
           "limit": { "context": 262144, "output": 16384 }
         }
       }
@@ -121,12 +121,12 @@ Then connect the provider:
 2. Run `/connect` and select **Other**.
 3. Enter `kanto` as the provider ID.
 4. Paste your WebUI API key.
-5. Run `/models` and select **Qwen Strata**.
+5. Run `/models` and select **Qwen Flash**.
 
 The example sets a client output limit of 16,384 tokens. See the
 [v1 custom-provider guide](https://opencode.ai/docs/providers/#custom-provider).
 
-Keep the key in OpenCode's credential store. To use Strata by default, add
+Keep the key in OpenCode's credential store. To use Qwen Flash by default, add
 `"model": "kanto/Qwen3.8-Flash-Next-Strata"` at the top level of the config.
 
 ### Configure Hermes
@@ -214,9 +214,51 @@ manage the downloaded model list.
 
 ### Manage Lemonade models
 
-Lemonade manages Strata through the `nix-amd-ai` module. Set the model,
-quantization, and cache options in `nix/hosts/nixos/vermilion/lemonade.nix`.
+Lemonade manages Halogen and Strata. Halogen serves Qwen3.8 Flash Next with the
+same UD-IQ4_XS GGUF used by Strata. The pinned Halogen runtime and cache settings
+live in `nix/hosts/nixos/vermilion/halogen/`. The GGUF and Strata fallback settings
+live in `nix/hosts/nixos/vermilion/lemonade.nix`.
 Lemonade stores models under `/var/lib/lemonade/models`.
+
+The model IDs are:
+
+- `Qwen3.8-Flash-Next-Halogen` selects Halogen.
+- `Qwen3.8-Flash-Next-Strata` is a compatibility alias for Halogen. Existing
+  clients and WebUI model records can keep this ID. Lemonade resolves both IDs
+  to the same loaded model, so switching IDs does not discard the prompt cache.
+- `Qwen3.8-Flash-Next-Strata-Fallback` selects the original Strata engine.
+
+Lemonade loads at most one large model at a time. Selecting the fallback or
+another Lemonade model unloads Halogen. Aliases are reconciled before Lemonade
+starts, preserving unrelated aliases. The migration removes the old Strata
+registration after registering the separately named fallback.
+
+Halogen has two generation slots for concurrent agent sessions. Its 262,144-token
+KV pool is shared between sessions, including reserved output space. The
+262,144-token per-request ceiling does not guarantee that both users can fill
+that context simultaneously. The tested workload used about 90,000 prompt tokens
+per user.
+
+Prompt cache mode 2 reuses conversation prefixes automatically. Keep the system
+prompt and previous messages stable to retain cache hits. The cache lives in
+memory and is lost when Halogen unloads or restarts. Disk persistence and
+experimental reuse after compaction are disabled. The 16,384-token prefill batch
+controls working memory, not the response length.
+
+The launcher runs the pinned OCI filesystem as the Lemonade user, binds both
+Halogen ports to loopback, and terminates its process group on unload. It mounts
+model files read-only. Vision assets are included, but the two-user performance
+benchmark measured text workloads.
+
+Run the local integration checks with `nix develop -c python3 scripts/check-halogen.py`.
+They build the pinned runtime, test mount permissions and process cleanup, and
+exercise Lemonade aliases and streaming against a stub. They do not load weights
+or establish GPU inference quality.
+
+For a rollout, first validate streaming, tool calls, reasoning, images, request
+cancellation, and memory release when loading the fallback. Verify both the old
+and new IDs through Lemonade and the authenticated WebUI API. These live checks
+require an explicitly requested deployment. Do not deploy a candidate to test it.
 
 ### Coordinate resource use
 
@@ -234,10 +276,10 @@ In Open WebUI, open **Chat Controls → Advanced Parameters**. Use the control
 for the selected backend:
 
 - For models hosted by Ollama, use **Think (Ollama)**.
-- For Strata through Lemonade, set **Reasoning Effort** to **Custom** and enter
+- For Halogen or the Strata fallback through Lemonade, set **Reasoning Effort** to **Custom** and enter
   a level supported by that model.
 - Other Lemonade models use their own chat templates and supported reasoning
-  parameters. Do not assume that they accept Strata's reasoning levels.
+  parameters. Do not assume that they accept another backend's reasoning levels.
 
 The **Think (Ollama)** control does not apply to Lemonade, including the Qwen
 aliases. **Reasoning Tags** controls display, not the amount of thinking.
@@ -250,7 +292,9 @@ Supported values and defaults vary by model and backend. Check them whenever
 you add or replace a model, and use the exact reported level names.
 
 Ollama exposes supported values and defaults through
-[`/api/show`](https://docs.ollama.com/capabilities/thinking). For Strata, see the
+[`/api/show`](https://docs.ollama.com/capabilities/thinking). For Halogen, see the
+[Halogen request defaults](https://github.com/peonist-ai/halogen-flash-server/blob/main/docs/FLAGS.md).
+For the Strata fallback, see the
 [Strata documentation](https://github.com/Niko1221/Strata/blob/master/docs/DETAILS.md)
 for reasoning levels and the separate `reasoning_budget_tokens` parameter.
 
@@ -259,18 +303,18 @@ for reasoning levels and the separate `reasoning_budget_tokens` parameter.
 To save a model default, use **Workspace → Models → Edit Model → Advanced
 Parameters**. A setting in one WebUI chat does not change Hermes or OpenCode.
 
-For Strata requests through WebUI, the precedence is:
+For Halogen and Strata requests through WebUI, the precedence is:
 
 1. The request's `reasoning_effort`, such as a value sent by Hermes or OpenCode.
 2. The saved WebUI model's **Reasoning Effort**, when the request omits it.
-3. Strata's backend default, when neither supplies a value.
+3. The backend default, when neither supplies a value.
 
 A request-level setting overrides the saved model default. Client menus can
-expose levels that Strata does not support. Choose a level reported for the
+expose levels that the selected backend does not support. Choose a level reported for the
 selected model, and check that the client sends it in the Chat Completions
 request.
 
-This precedence describes Strata's OpenAI-compatible connection, not native
+This precedence describes the OpenAI-compatible connection, not native
 Ollama's `think` parameter.
 
 ## Run code with Open Terminal
