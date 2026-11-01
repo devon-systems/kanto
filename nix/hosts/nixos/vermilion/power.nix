@@ -1,11 +1,26 @@
 _: {
-  flake.nixosModules.vermilion = {
-    systemd.tmpfiles.rules = [
-      "w /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference - - - - performance"
-    ];
+  flake.nixosModules.vermilion.services.tuned = {
+    recommend.vermilion-performance = {};
 
-    services.udev.extraRules = ''
-      ACTION=="add", SUBSYSTEM=="platform-profile", ATTR{name}=="amd-pmf", ATTR{profile}="performance"
-    '';
+    profiles.vermilion-performance = {
+      main = {
+        summary = "Performance mode for shared CPU and GPU workloads";
+        include = "balanced";
+      };
+      cpu = {
+        governor = "performance";
+        energy_performance_preference = "performance";
+      };
+      acpi.platform_profile = "performance";
+    };
+
+    ppdSettings = {
+      main.default = "performance";
+      profiles = {
+        balanced = "balanced";
+        performance = "vermilion-performance";
+        power-saver = "powersave";
+      };
+    };
   };
 }
