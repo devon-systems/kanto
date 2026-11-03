@@ -24,11 +24,12 @@ _: {
         HALOGEN_MAX_TOK = "16384";
         HALOGEN_PROMPT_CACHE = "2";
         HALOGEN_COMPOSABLE_CONTEXT = "0";
-        HALOGEN_MAX_TOKENS_DEFAULT = "16384";
+        HALOGEN_MAX_TOKENS_DEFAULT = "24576";
         # The output budget bounds thinking AND content together. Reserve enough
-        # answer room for a 10k-token Hermes compaction summary so a request
-        # without max_tokens ends with content instead of finish_reason=length.
-        HALOGEN_THINKING_ANSWER_ROOM = "12288";
+        # answer room for a Hermes compaction summary even when the summarizer
+        # rambles (observed one attempt past 12k on a ~200k-token session) so a
+        # request without max_tokens ends with content instead of length.
+        HALOGEN_THINKING_ANSWER_ROOM = "20480";
         HALOGEN_TEMPERATURE = "0.6";
         HALOGEN_TOP_P = "0.95";
         HALOGEN_TOP_K = "20";
