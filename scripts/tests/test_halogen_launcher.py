@@ -8,15 +8,18 @@ import fcntl
 import importlib.util
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
+from pathlib import Path
 
-SOURCE = Path(__file__).resolve().parents[2] / "nix/hosts/nixos/vermilion/halogen/_launcher.py"
+SOURCE = (
+    Path(__file__).resolve().parents[2]
+    / "nix/hosts/nixos/vermilion/halogen/_launcher.py"
+)
 spec = importlib.util.spec_from_file_location("launcher", SOURCE)
 launcher = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(launcher)
@@ -33,17 +36,21 @@ class LauncherTests(unittest.TestCase):
         self.state.mkdir()
         self.model = self.cache / "model.gguf"
         self.model.write_text("fixture")
-        self.settings = json.loads(Path(os.environ["HALOGEN_TEST_SETTINGS"]).read_text())
+        self.settings = json.loads(
+            Path(os.environ["HALOGEN_TEST_SETTINGS"]).read_text()
+        )
         self.settings.update(model_cache=str(self.cache), state_dir=str(self.state))
-        self.arguments = argparse.Namespace(model=str(self.model), host="127.0.0.1", port=19876, ctx=262144)
+        self.arguments = argparse.Namespace(
+            model=str(self.model), host="127.0.0.1", port=19876, ctx=262144
+        )
 
     def command(self, code):
         command = launcher.build_command(self.settings, self.arguments)
         separator = command.index("--")
-        return command[:separator + 1] + ["python3", "-c", code]
+        return command[: separator + 1] + ["python3", "-c", code]
 
     def test_filesystem_environment_and_dependencies(self):
-        code = f"""
+        code = """
 import os
 import transformers, fastapi, uvicorn
 from pathlib import Path
@@ -75,7 +82,9 @@ Path('/state/writable').write_text('ok')
         self.arguments.model = str(shard)
         command = launcher.build_command(self.settings, self.arguments)
         position = command.index("HALOGEN_CHECKPOINT")
-        self.assertEqual(command[position + 1], "/models/snapshots/model-00001-of-00003.gguf")
+        self.assertEqual(
+            command[position + 1], "/models/snapshots/model-00001-of-00003.gguf"
+        )
 
     def test_rejects_external_model_and_public_bind(self):
         self.arguments.host = "0.0.0.0"
@@ -91,7 +100,7 @@ Path('/state/writable').write_text('ok')
     def test_unload_kills_uncooperative_child(self):
         lock_path = self.state / "lock"
         ready = self.state / "ready"
-        code = f"""
+        code = """
 import fcntl, signal, time
 from pathlib import Path
 signal.signal(signal.SIGTERM, signal.SIG_IGN)

@@ -3,11 +3,11 @@
 import argparse
 import json
 import os
-from pathlib import Path
 import signal
 import socket
 import subprocess
 import sys
+from pathlib import Path
 
 
 def build_command(settings, arguments):
@@ -15,7 +15,9 @@ def build_command(settings, arguments):
     # name. Resolving an HF symlink would replace that name with a blob hash.
     model = Path(arguments.model).absolute()
     cache = Path(settings["model_cache"]).resolve(strict=True)
-    if not model.is_relative_to(cache) or not model.resolve(strict=True).is_relative_to(cache):
+    if not model.is_relative_to(cache) or not model.resolve(strict=True).is_relative_to(
+        cache
+    ):
         raise ValueError(f"model must be inside {cache}")
     if arguments.host != "127.0.0.1":
         raise ValueError("Halogen must bind to loopback")
@@ -29,14 +31,16 @@ def build_command(settings, arguments):
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         engine_port = listener.getsockname()[1]
-    environment.update({
-        "HALOGEN_CHECKPOINT": "/models/" + str(model.relative_to(cache)),
-        "HALOGEN_BIND": arguments.host,
-        "HALOGEN_API_PORT": str(arguments.port),
-        "HALOGEN_PORT": str(engine_port),
-        "HALOGEN_CTX": str(arguments.ctx),
-        "HOME": "/state",
-    })
+    environment.update(
+        {
+            "HALOGEN_CHECKPOINT": "/models/" + str(model.relative_to(cache)),
+            "HALOGEN_BIND": arguments.host,
+            "HALOGEN_API_PORT": str(arguments.port),
+            "HALOGEN_PORT": str(engine_port),
+            "HALOGEN_CTX": str(arguments.ctx),
+            "HOME": "/state",
+        }
+    )
     command = [settings["bubblewrap"], "--die-with-parent", "--unshare-pid"]
     # Bind each image directory beneath bubblewrap's temporary root so it can
     # create mount points absent from the OCI image, such as /nix/store.
@@ -46,6 +50,7 @@ def build_command(settings, arguments):
             command.extend(["--symlink", os.readlink(entry), target])
         else:
             command.extend(["--ro-bind", str(entry), target])
+    # fmt: off
     command.extend([
         "--ro-bind", "/nix/store", "/nix/store",
         "--ro-bind", settings["entrypoint"], "/usr/local/bin/entrypoint.sh",
@@ -56,6 +61,7 @@ def build_command(settings, arguments):
         "--tmpfs", "/tmp", "--tmpfs", "/run", "--tmpfs", "/var/tmp",
         "--clearenv",
     ])
+    # fmt: on
     for name, value in sorted(environment.items()):
         command.extend(["--setenv", name, value])
     command.extend(["--chdir", image.get("WorkingDir") or "/", "--"])
