@@ -8,11 +8,11 @@ stores:
 keys:
   # === user keys (aly@<host>) ===
   - &user_aly_fallarbor age1jfm7elg24lv8u0aw5ny8vdt6fcwhkzzmpzv9kxlrj9v3ng07ngcsdrgrj5
+  - &user_aly_lavaridge age12kxzklacs2qf2x4daevwznj36ww6j6vwnm3y3plfhkww9ftfma7s08574m
   - &user_aly_lilycove age1tdgfvwl4qdptyvgxju3rwz9uh45hz422txzcgsrwm4f4f96x558skzxklr
   - &user_aly_mauville age1876lthmlfq2aq6nm6z2qyu0ed4aa5ss68xvnlw5cqxcdtzslaqrqzgcmlm
   - &user_aly_petalburg age162sx8kppp90mjxw88eqs78hgnpkddf8k9kgtksmmexzvcdxknpkspmkgaf
   - &user_aly_rustboro age1fczwtlqdqq7pjyzna2yl9nvmhpe68zk5k6nyn0dt4sp0lts04anskhcmu6
-  - &user_aly_sootopolis age16fm9jk3msta76lp7t0m5a5hn8l4gc752unl09azjkk33z3ghxg7sd52yrj
   - &user_aly_verdanturf age1zl4dad3jwhff9f8smv9l2g78g2fpa7huye9354y9vvhrw03vs47skqhue3
   # === host keys (root@<host>) ===
   - &host_vermilion age19z8tme86l0yl495nr5rvxfd2muzhwez0ccv98qqegdk39rw0jccqjaw70y
@@ -23,22 +23,22 @@ creation_rules:
     key_groups:
       - age:
           - *user_aly_fallarbor
+          - *user_aly_lavaridge
           - *user_aly_lilycove
           - *user_aly_mauville
           - *user_aly_petalburg
           - *user_aly_rustboro
-          - *user_aly_sootopolis
           - *user_aly_verdanturf
           - *host_vermilion
   - path_regex: ^k8s/secrets/.*\.ya?ml$
     key_groups:
       - age:
           - *user_aly_fallarbor
+          - *user_aly_lavaridge
           - *user_aly_lilycove
           - *user_aly_mauville
           - *user_aly_petalburg
           - *user_aly_rustboro
-          - *user_aly_sootopolis
           - *user_aly_verdanturf
           - *host_vermilion
           - *flux_k8s
