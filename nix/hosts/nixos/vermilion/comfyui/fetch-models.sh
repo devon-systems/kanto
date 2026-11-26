@@ -5,31 +5,31 @@ manifest=$1
 models_directory=$2
 
 verify_model() {
-  local file=$1 checksum=$2
-  printf '%s  %s\n' "$checksum" "$file" | sha256sum --check --status
+	local file=$1 checksum=$2
+	printf '%s  %s\n' "$checksum" "$file" | sha256sum --check --status
 }
 
 while IFS=$'\t' read -r directory name url sha256; do
-  destination="$models_directory/$directory/$name"
-  partial="$destination.part"
-  mkdir -p "$(dirname "$destination")"
+	destination="$models_directory/$directory/$name"
+	partial="$destination.part"
+	mkdir -p "$(dirname "$destination")"
 
-  if [[ -f $destination ]]; then
-    # Migrate the old Nix-store links without downloading the weights again.
-    if [[ -L $destination ]]; then
-      cp --reflink=auto --dereference --no-preserve=mode "$destination" "$partial"
-      mv -f "$partial" "$destination"
-    fi
-    continue
-  fi
+	if [[ -f $destination ]]; then
+		# Migrate the old Nix-store links without downloading the weights again.
+		if [[ -L $destination ]]; then
+			cp --reflink=auto --dereference --no-preserve=mode "$destination" "$partial"
+			mv -f "$partial" "$destination"
+		fi
+		continue
+	fi
 
-  echo "Downloading $name"
-  curl --fail --location --silent --show-error --retry 5 --retry-delay 5 \
-    --continue-at - --output "$partial" "$url"
-  if ! verify_model "$partial" "$sha256"; then
-    echo "Checksum mismatch: $name" >&2
-    rm -f "$partial"
-    exit 1
-  fi
-  mv -f "$partial" "$destination"
+	echo "Downloading $name"
+	curl --fail --location --silent --show-error --retry 5 --retry-delay 5 \
+		--continue-at - --output "$partial" "$url"
+	if ! verify_model "$partial" "$sha256"; then
+		echo "Checksum mismatch: $name" >&2
+		rm -f "$partial"
+		exit 1
+	fi
+	mv -f "$partial" "$destination"
 done < <(jq -r '.[] | [.directory, .name, .url, .sha256] | @tsv' "$manifest")
