@@ -215,10 +215,11 @@ manage the downloaded model list.
 ### Manage Lemonade models
 
 Lemonade serves Qwen3.8 Flash Next through its built-in Halogen backend.
-Vermilion's model sync downloads the upstream HGN checkpoint and vision assets
-into `/var/lib/lemonade/models`. Lemonade pulls the digest-pinned Halogen
-image on first load and runs it under rootless Podman. The model catalog lists
-approximately 119 GB of checkpoint files.
+Vermilion's `lemond-halogen` service installs the digest-pinned Halogen image
+through Lemonade, then downloads the upstream HGN checkpoint and vision assets
+into `/var/lib/lemonade/models`. Lemonade runs the image under rootless Podman
+when a client loads the model. The model catalog lists approximately 119 GB of
+checkpoint files.
 
 The model IDs are:
 

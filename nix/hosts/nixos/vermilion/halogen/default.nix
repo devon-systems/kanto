@@ -49,10 +49,7 @@ _: {
     virtualisation.podman.enable = true;
     users.users.${lemonade.user}.autoSubUidGidRange = true;
 
-    hardware.amd-npu = {
-      strata.modelName = "Qwen3.8-Flash-Next-Strata-Fallback";
-      lemonade.models = ["Qwen3.8-Flash-Next-Halogen"];
-    };
+    hardware.amd-npu.strata.modelName = "Qwen3.8-Flash-Next-Strata-Fallback";
 
     system.build.halogenReconcile = reconcile;
     systemd.services.lemond = {
@@ -65,6 +62,33 @@ _: {
         Delegate = true;
         ExecStartPre = lib.mkAfter ["${reconcile}/bin/halogen-reconcile-alias"];
       };
+    };
+
+    systemd.services.lemond-halogen = {
+      description = "Reconcile the Halogen backend and model";
+      after = ["lemond.service"];
+      requires = ["lemond.service"];
+      wantedBy = lib.optional lemonade.autoStart "multi-user.target";
+      path = [(pkgs.lemonade.override {withDesktopApp = lemonade.desktopApp.enable;}) pkgs.curl pkgs.jq];
+      environment.LEMONADE_PORT = toString lemonade.port;
+      serviceConfig = {
+        Type = "simple";
+        User = lemonade.user;
+      };
+      script = ''
+        for _ in $(seq 60); do
+          if lemonade status >/dev/null 2>&1; then break; fi
+          sleep 2
+        done
+        lemonade status >/dev/null
+
+        # The built-in model stays hidden until its guest backend is installed.
+        lemonade backends install halogen:rocm
+        model=Qwen3.8-Flash-Next-Halogen
+        if ! curl -fsS "http://127.0.0.1:$LEMONADE_PORT/api/v1/models/$model" | jq -e '.downloaded' >/dev/null; then
+          lemonade pull "$model"
+        fi
+      '';
     };
   };
 }
