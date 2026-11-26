@@ -1,4 +1,4 @@
-"""Build and test the Halogen integration locally without loading model weights."""
+"""Test the Halogen model and alias migration against temporary state."""
 
 import os
 import subprocess
@@ -19,7 +19,7 @@ def main():
             "2",
             "--cores",
             "4",
-            ".#nixosConfigurations.vermilion.config.system.build.halogenIntegration",
+            ".#nixosConfigurations.vermilion.config.system.build.halogenReconcile",
         ],
         cwd=ROOT,
         text=True,
@@ -27,11 +27,7 @@ def main():
     integration = Path(output)
     environment = dict(
         os.environ,
-        HALOGEN_TEST_SETTINGS=str(integration / "settings.json"),
-        HALOGEN_TEST_RECONCILE=str(
-            integration / "reconcile/bin/halogen-reconcile-alias"
-        ),
-        HALOGEN_TEST_LEMOND=str(integration / "lemonade/bin/lemond"),
+        HALOGEN_TEST_RECONCILE=str(integration / "bin/halogen-reconcile-alias"),
     )
     subprocess.run(
         [
@@ -42,7 +38,7 @@ def main():
             "-s",
             "scripts/tests",
             "-p",
-            "test_halogen_*.py",
+            "test_halogen_alias.py",
             "-v",
         ],
         cwd=ROOT,

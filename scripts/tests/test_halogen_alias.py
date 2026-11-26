@@ -17,6 +17,7 @@ class AliasTests(unittest.TestCase):
             config.mkdir(parents=True)
             cache.mkdir()
             models = config / "user_models.json"
+            settings = config / "config.json"
             aliases = cache / "aliases.json"
             models.write_text(
                 json.dumps(
@@ -24,7 +25,16 @@ class AliasTests(unittest.TestCase):
                         "Qwen3.8-Flash-Next-Strata": {"recipe": "strata"},
                         "Qwen3.8-Flash-Next-Strata-Fallback": {"recipe": "strata"},
                         "Qwen3.8-Flash-Next-Halogen": {"recipe": "halogen"},
+                        "user.Qwen3.8-Flash-Next-Halogen": {"recipe": "halogen"},
                         "roommate-model": {"recipe": "llamacpp"},
+                    }
+                )
+            )
+            settings.write_text(
+                json.dumps(
+                    {
+                        "halogen": {"rocm_bin": "/etc/lemonade/backends/halogen-rocm"},
+                        "max_loaded_models": 1,
                     }
                 )
             )
@@ -43,7 +53,14 @@ class AliasTests(unittest.TestCase):
                 actual_models = json.loads(models.read_text())
                 actual_aliases = json.loads(aliases.read_text())
                 self.assertNotIn("Qwen3.8-Flash-Next-Strata", actual_models)
-                self.assertEqual(len(actual_models), 3)
+                self.assertEqual(
+                    set(actual_models),
+                    {"Qwen3.8-Flash-Next-Strata-Fallback", "roommate-model"},
+                )
+                self.assertEqual(
+                    json.loads(settings.read_text()),
+                    {"halogen": {}, "max_loaded_models": 1},
+                )
                 self.assertEqual(actual_aliases["roommate"], "roommate-model")
                 for name in [
                     "Qwen3.8-Flash-Next-Strata",

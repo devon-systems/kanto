@@ -214,46 +214,26 @@ manage the downloaded model list.
 
 ### Manage Lemonade models
 
-Lemonade manages Halogen and Strata. Halogen serves Qwen3.8 Flash Next with the
-same UD-IQ4_XS GGUF used by Strata. The pinned Halogen runtime and cache settings
-live in `nix/hosts/nixos/vermilion/halogen/`. The GGUF and Strata fallback settings
-live in `nix/hosts/nixos/vermilion/lemonade.nix`.
-Lemonade stores models under `/var/lib/lemonade/models`.
+Lemonade serves Qwen3.8 Flash Next through its built-in Halogen backend.
+Vermilion's `lemond-halogen` service installs the digest-pinned Halogen image
+through Lemonade, then downloads the upstream HGN checkpoint and vision assets
+into `/var/lib/lemonade/models`. Lemonade runs the image under rootless Podman
+when a client loads the model. The model catalog lists approximately 119 GB of
+checkpoint files.
 
 The model IDs are:
 
 - `Qwen3.8-Flash-Next-Halogen` selects Halogen.
 - `Qwen3.8-Flash-Next-Strata` is a compatibility alias for Halogen. Existing
-  clients and WebUI model records can keep this ID. Lemonade resolves both IDs
-  to the same loaded model, so switching IDs does not discard the prompt cache.
-- `Qwen3.8-Flash-Next-Strata-Fallback` selects the original Strata engine.
+  clients and WebUI model records can keep this ID.
+- `Qwen3.8-Flash-Next-Strata-Fallback` selects Strata with its UD-IQ4_XS GGUF.
 
-Lemonade loads at most one large model at a time. Selecting the fallback or
-another Lemonade model unloads Halogen. Aliases are reconciled before Lemonade
-starts, preserving unrelated aliases. The migration removes the old Strata
-registration after registering the separately named fallback.
+Lemonade loads at most one model at a time. The Halogen backend uses the host
+exclusively while its model is loaded. The service reconciles aliases and
+removes obsolete model registrations before Lemonade starts.
 
-Halogen has two generation slots for concurrent agent sessions. Its 262,144-token
-KV pool is shared between sessions, including reserved output space. The
-262,144-token per-request ceiling does not guarantee that both users can fill
-that context simultaneously. The tested workload used about 90,000 prompt tokens
-per user.
-
-Prompt cache mode 2 reuses conversation prefixes automatically. Keep the system
-prompt and previous messages stable to retain cache hits. The cache lives in
-memory and is lost when Halogen unloads or restarts. Disk persistence and
-experimental reuse after compaction are disabled. The 16,384-token prefill batch
-controls working memory, not the response length.
-
-The launcher runs the pinned OCI filesystem as the Lemonade user, binds both
-Halogen ports to loopback, and terminates its process group on unload. It mounts
-model files read-only. Vision assets are included, but the two-user performance
-benchmark measured text workloads.
-
-Run the local integration checks with `nix develop -c python3 scripts/check-halogen.py`.
-They build the pinned runtime, test mount permissions and process cleanup, and
-exercise Lemonade aliases and streaming against a stub. They do not load weights
-or establish GPU inference quality.
+Run `nix develop -c python3 scripts/check-halogen.py` to verify the migration
+against temporary configuration and aliases.
 
 For a rollout, first validate streaming, tool calls, reasoning, images, request
 cancellation, and memory release when loading the fallback. Verify both the old
